@@ -3,7 +3,7 @@ import { useRoutes, useLocation } from "react-router-dom";
 import { InitScreen } from "./routes/InitScreen";
 import { Home } from "./routes/Home";
 import { AnimatePresence } from "framer-motion";
-import "./App.cs	s"
+import "./App.css"
 
 const AppRoutes = () => {
 	const element = useRoutes([
