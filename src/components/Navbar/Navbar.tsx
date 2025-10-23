@@ -9,9 +9,14 @@ import {
 	FaRss,
 	FaUser,
 	FaCog,
+	FaDownload,
 } from "react-icons/fa";
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+	updateAvailable?: boolean;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ updateAvailable = false }) => {
 	const getNavLinkClass = ({ isActive }: { isActive: boolean }): string => {
 		return isActive ? "nav-item active" : "nav-item";
 	};
@@ -46,6 +51,12 @@ export const Navbar: React.FC = () => {
 			</div>
 
 			<div className="nav-group-bottom">
+				<NavLink to="/update" className={getNavLinkClass}>
+					<FaDownload size="1.5rem" />
+					{updateAvailable && <span className="update-indicator"></span>}
+					<span className="nav-tooltip">Обновление</span>
+				</NavLink>
+
 				<NavLink to="/settings" className={getNavLinkClass}>
 					<FaCog size="1.5rem" />
 					<span className="nav-tooltip">Настройки</span>

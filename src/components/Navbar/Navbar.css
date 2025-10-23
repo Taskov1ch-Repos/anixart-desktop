@@ -81,3 +81,14 @@
 	visibility: visible;
 	transform: translateY(-50%) translateX(15px);
 }
+
+.update-indicator {
+	position: absolute;
+	top: 0.75rem;
+	right: 0.75rem;
+	width: 8px;
+	height: 8px;
+	background-color: #E23D3D;
+	border-radius: 50%;
+	box-shadow: 0 0 5px #E23D3D;
+}
