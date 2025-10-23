@@ -1,12 +1,21 @@
-import { Store } from "@tauri-apps/plugin-store";
+import { LazyStore } from "@tauri-apps/plugin-store";
 
 const isTauri = !!(window as any).__TAURI__;
 
-let tauriStore: Store | null = null;
+let tauriStore: LazyStore | null = null;
 
-const getTauriStore = (): Store | null => {
+const getTauriStore = (): LazyStore | null => {
+	if (!isTauri) {
+		return null;
+	}
+
 	if (tauriStore === null) {
-		tauriStore = new Store("settings.dat");
+		try {
+			tauriStore = new LazyStore("settings.json");
+		} catch (e) {
+			console.error("Failed to initialize Tauri Store:", e);
+			return null;
+		}
 	}
 
 	return tauriStore;
@@ -21,7 +30,6 @@ export const loadAppZoom = async (): Promise<number> => {
 			zoomLevel = await store?.get<number>("appZoom");
 		} else {
 			const zoomStr = localStorage.getItem("appZoom");
-
 			if (zoomStr) {
 				zoomLevel = parseInt(zoomStr, 10);
 			}
@@ -41,8 +49,12 @@ export const saveAppZoom = async (zoomLevel: number) => {
 	try {
 		if (isTauri) {
 			const store = getTauriStore();
-			await store.set("appZoom", zoomLevel);
-			await store.save();
+			if (store) {
+				await store.set("appZoom", zoomLevel);
+				await store.save();
+			} else {
+				console.error("Tauri store is not available to save settings.");
+			}
 		} else {
 			localStorage.setItem("appZoom", zoomLevel.toString());
 		}
