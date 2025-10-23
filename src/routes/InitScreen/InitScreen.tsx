@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { pingServer } from "../utils/pingServer";
-import logo from "../assets/logo.svg";
+import { pingServer } from "../../utils/pingServer";
+import logo from "../../assets/logo.svg";
 import "./InitScreen.css";
 
 type InitStatus = "pinging" | "error" | "success";
@@ -59,10 +59,7 @@ export const InitScreen: React.FC = () => {
 			exit={{ opacity: 0 }}
 			transition={{ duration: 0.5 }}
 		>
-			<div className="splash-bg">
-				<div className="glass-reflection-1"></div>
-				<div className="glass-reflection-2"></div>
-			</div>
+			<div className="splash-bg"></div>
 
 			<motion.div
 				className="splash-content"
@@ -95,7 +92,7 @@ export const InitScreen: React.FC = () => {
 							exit={{ opacity: 0 }}
 							className="status-indicator error"
 						>
-							<p>Сервера временно недоступны</p>
+							<p>Не удается подключиться к серверам</p>
 							<motion.span
 								className="retry-prompt"
 								initial={{ opacity: 0 }}

@@ -1,3 +1,7 @@
+:root {
+	--navbar-width: 5rem;
+}
+
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap");
 
 body,
@@ -19,6 +23,37 @@ html,
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	overflow: hidden;
+	overflow-y: auto;
 	position: relative;
+	box-sizing: border-box;
+}
+
+.route-wrapper.page-content {
+	padding-left: var(--navbar-width);
+	justify-content: flex-start;
+	align-items: flex-start;
+	padding-top: 2rem;
+	padding-right: 2rem;
+}
+
+.stub-page {
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	text-align: center;
+	padding: 2rem;
+	padding-left: 0;
+}
+
+.stub-page h1 {
+	font-size: 2.5rem;
+	font-weight: 700;
+	color: #E23D3D;
+	margin-bottom: 0.5rem;
+}
+
+.stub-page p {
+	font-size: 1rem;
+	color: #888;
 }
