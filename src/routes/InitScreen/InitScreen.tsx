@@ -2,52 +2,81 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { pingServer } from "../../utils/pingServer";
+import { updateAnixartClient, getAnixartClient } from "../../client";
+import { Anixart } from "anixartjs";
 import "./InitScreen.css";
 
-type InitStatus = "pinging" | "error" | "success";
+type InitStatus = "finding_endpoint" | "pinging" | "error" | "success";
 
 export const InitScreen: React.FC = () => {
-	const [status, setStatus] = useState<InitStatus>("pinging");
+	const [status, setStatus] = useState<InitStatus>("finding_endpoint");
+	const [message, setMessage] = useState("Поиск доступного сервера...");
 	const navigate = useNavigate();
 
-	const handlePing = async () => {
-		setStatus("pinging");
-		const isOnline = await pingServer();
+	const findAndSetEndpoint = async () => {
+		setStatus("finding_endpoint");
+		setMessage("Получение списка серверов...");
+		try {
+			const endpoints = await Anixart.getEndpointUrls();
+			const urlsToTry = Object.values(endpoints)
+				.map(e => e.api_url)
+				.concat(getAnixartClient().baseUrl.toString());
 
-		if (isOnline) {
-			setStatus("success");
-			setTimeout(() => navigate("/home"), 500);
-		} else {
+			const uniqueUrls = [...new Set(urlsToTry)];
+
+			console.log("URLs to try:", uniqueUrls);
+			setStatus("pinging");
+
+			for (const url of uniqueUrls) {
+				setMessage(`Проверка ${url}...`);
+				const isOnline = await pingServer(url);
+
+				if (isOnline) {
+					setMessage(`Сервер ${url} доступен!`);
+					updateAnixartClient(url);
+					setStatus("success");
+					setTimeout(() => navigate("/home"), 500);
+					return;
+				}
+				setMessage(`Сервер ${url} недоступен.`);
+			}
+
+			setMessage("Не удалось подключиться ни к одному серверу.");
+			setStatus("error");
+
+		} catch (error) {
+			console.error("Failed to get endpoint URLs or ping servers:", error);
+			setMessage("Ошибка при получении списка серверов.");
 			setStatus("error");
 		}
 	};
 
 	useEffect(() => {
-		setTimeout(handlePing, 100);
+		setTimeout(findAndSetEndpoint, 100);
 	}, []);
+
+	const handleRetry = () => {
+		if (status === "error") {
+			findAndSetEndpoint();
+		}
+	};
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (status === "error" && event.code === "Space") {
 				event.preventDefault();
-				handlePing();
-			}
-		};
-
-		const handleClick = () => {
-			if (status === "error") {
-				handlePing();
+				handleRetry();
 			}
 		};
 
 		if (status === "error") {
 			window.addEventListener("keydown", handleKeyDown);
-			window.addEventListener("click", handleClick);
+			window.addEventListener("click", handleRetry);
 		}
 
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
-			window.removeEventListener("click", handleClick);
+			window.removeEventListener("click", handleRetry);
 		};
 	}, [status]);
 
@@ -70,16 +99,16 @@ export const InitScreen: React.FC = () => {
 				<h1 className="logo-title">Anixart Desktop</h1>
 
 				<AnimatePresence mode="wait">
-					{status === "pinging" && (
+					{(status === "finding_endpoint" || status === "pinging") && (
 						<motion.div
-							key="pinging"
+							key="loading"
 							initial={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							className="status-indicator"
 						>
 							<div className="spinner"></div>
-							<span>Проверка серверов...</span>
+							<span>{message}</span>
 						</motion.div>
 					)}
 
@@ -91,7 +120,7 @@ export const InitScreen: React.FC = () => {
 							exit={{ opacity: 0 }}
 							className="status-indicator error"
 						>
-							<p>Не удается подключиться к серверам</p>
+							<p>{message}</p>
 							<motion.span
 								className="retry-prompt"
 								initial={{ opacity: 0 }}
@@ -100,6 +129,17 @@ export const InitScreen: React.FC = () => {
 							>
 								Нажмите [Пробел] или кликните для повтора
 							</motion.span>
+						</motion.div>
+					)}
+					{status === "success" && (
+						<motion.div
+							key="success"
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							className="status-indicator"
+						>
+							<span>{message}</span>
 						</motion.div>
 					)}
 				</AnimatePresence>
