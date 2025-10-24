@@ -282,3 +282,10 @@ html,
 .retry-prompt {
 	color: var(--navbar-icon-color);
 }
+
+.loading-centered {
+	justify-content: center !important;
+	align-items: center !important;
+	padding-left: 0 !important;
+	padding-top: 0 !important;
+}

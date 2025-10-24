@@ -16,7 +16,7 @@ export const Profile = () => {
 	if (isLoading) {
 		return (
 			<motion.div
-				className="route-wrapper page-content stub-page"
+				className="route-wrapper page-content stub-page loading-centered"
 				initial={{ opacity: 0 }}
 				animate={{ opacity: 1 }}
 				transition={{ duration: 0.3 }}
