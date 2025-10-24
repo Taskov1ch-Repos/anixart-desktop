@@ -25,7 +25,6 @@ export const Navbar: React.FC<NavbarProps> = ({ updateAvailable = false }) => {
 		<nav className="navbar">
 			<div className="nav-group-top">
 				<NavLink to="/home" className={getNavLinkClass}>
-					{/* Заменяем img на div с фоном */}
 					<div className="nav-logo-icon"></div>
 					<span className="nav-tooltip">Главный</span>
 				</NavLink>
@@ -58,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({ updateAvailable = false }) => {
 					<span className="nav-tooltip">Настройки</span>
 				</NavLink>
 				<NavLink to="/about" className={getNavLinkClass}>
-					<FaInfoCircle size="1.5rem" /> {/* Используем новую иконку */}
+					<FaInfoCircle size="1.5rem" />
 					<span className="nav-tooltip">О приложении</span>
 				</NavLink>
 			</div>
