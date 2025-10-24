@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { getCurrentVersion } from "../../utils/updateChecker";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { FaQuestionCircle, FaBook, FaExclamationTriangle } from "react-icons/fa";
 import "./About.css";
 
 export const About: React.FC = () => {
@@ -13,6 +14,10 @@ export const About: React.FC = () => {
 	const typescriptUrl = "https://www.typescriptlang.org/";
 	const viteUrl = "https://vitejs.dev/";
 	const anixartjsUrl = "https://github.com/theDesConnet/AnixartJS";
+
+	const faqUrl = "https://anixart-app.com/faq";
+	const rulesUrl = "https://anixart-app.com/rules";
+	const reportUrl = "https://github.com/Taskov1ch-Repos/anixart-desktop/issues/new";
 
 	const handleLinkClick = (url: string) => {
 		openUrl(url).catch(err => console.error("Failed to open URL:", err));
@@ -61,6 +66,24 @@ export const About: React.FC = () => {
 					<span className="link" onClick={() => handleLinkClick(viteUrl)}>Vite</span>,{" "}
 					<span className="link" onClick={() => handleLinkClick(anixartjsUrl)}>AnixartJS</span>.
 				</p>
+
+				<div className="about-links">
+					<div className="about-link-item" onClick={() => handleLinkClick(faqUrl)}>
+						<FaQuestionCircle size="1.5rem" />
+						<span className="about-tooltip">ЧаВО</span>
+					</div>
+
+					<div className="about-link-item" onClick={() => handleLinkClick(rulesUrl)}>
+						<FaBook size="1.5rem" />
+						<span className="about-tooltip">Правила сообщества</span>
+					</div>
+
+					<div className="about-link-item" onClick={() => handleLinkClick(reportUrl)}>
+						<FaExclamationTriangle size="1.5rem" />
+						<span className="about-tooltip">Сообщить о проблеме</span>
+					</div>
+				</div>
+
 			</div>
 		</motion.div>
 	);
