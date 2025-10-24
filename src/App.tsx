@@ -11,6 +11,7 @@ import { Profile } from "./routes/Profile/Profile";
 import { Settings } from "./routes/Settings/Settings";
 import { UpdatePage } from "./routes/UpdatePage/UpdatePage";
 import { checkForUpdates } from "./utils/updateChecker";
+import { About } from "./routes/About/About";
 import "./App.css";
 
 const AppRoutes: React.FC = () => {
@@ -46,6 +47,7 @@ const AppRoutes: React.FC = () => {
 		{ path: "/profile", element: <Profile /> },
 		{ path: "/settings", element: <Settings /> },
 		{ path: "/update", element: <UpdatePage /> },
+		{ path: "/about", element: <About /> }
 		// TODO: Добавить роут "*" для 404
 	]);
 
