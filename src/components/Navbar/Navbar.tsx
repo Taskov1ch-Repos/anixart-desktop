@@ -1,7 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import "./Navbar.css";
-import logo from "../../assets/logo.svg";
 
 import {
 	FaCompass,
@@ -25,25 +24,22 @@ export const Navbar: React.FC<NavbarProps> = ({ updateAvailable = false }) => {
 		<nav className="navbar">
 			<div className="nav-group-top">
 				<NavLink to="/home" className={getNavLinkClass}>
-					<img src={logo} alt="Home" className="nav-logo-icon" />
+					{/* Заменяем img на div с фоном */}
+					<div className="nav-logo-icon"></div>
 					<span className="nav-tooltip">Главный</span>
 				</NavLink>
-
 				<NavLink to="/discover" className={getNavLinkClass}>
 					<FaCompass size="1.5rem" />
 					<span className="nav-tooltip">Обзор</span>
 				</NavLink>
-
 				<NavLink to="/bookmarks" className={getNavLinkClass}>
 					<FaBookmark size="1.375rem" />
 					<span className="nav-tooltip">Закладки</span>
 				</NavLink>
-
 				<NavLink to="/feed" className={getNavLinkClass}>
 					<FaRss size="1.375rem" />
 					<span className="nav-tooltip">Лента</span>
 				</NavLink>
-
 				<NavLink to="/profile" className={getNavLinkClass}>
 					<FaUser size="1.375rem" />
 					<span className="nav-tooltip">Профиль</span>
@@ -56,7 +52,6 @@ export const Navbar: React.FC<NavbarProps> = ({ updateAvailable = false }) => {
 					{updateAvailable && <span className="update-indicator"></span>}
 					<span className="nav-tooltip">Обновление</span>
 				</NavLink>
-
 				<NavLink to="/settings" className={getNavLinkClass}>
 					<FaCog size="1.5rem" />
 					<span className="nav-tooltip">Настройки</span>

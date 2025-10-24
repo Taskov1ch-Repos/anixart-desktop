@@ -29,6 +29,10 @@
 	width: 6.25rem;
 	height: 6.25rem;
 	filter: drop-shadow(0 0 1.25rem rgba(229, 61, 61, 0.6));
+	background-image: var(--logo-url);
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
 }
 
 .logo-title {

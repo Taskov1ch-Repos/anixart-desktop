@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { pingServer } from "../../utils/pingServer";
-import logo from "../../assets/logo.svg";
 import "./InitScreen.css";
 
 type InitStatus = "pinging" | "error" | "success";
@@ -67,7 +66,7 @@ export const InitScreen: React.FC = () => {
 				animate={{ opacity: 1, scale: 1 }}
 				transition={{ duration: 0.7, ease: "easeOut" }}
 			>
-				<img src={logo} alt="Anixart Desktop Logo" className="logo" />
+				<div className="logo init-logo"></div>
 				<h1 className="logo-title">Anixart Desktop</h1>
 
 				<AnimatePresence mode="wait">

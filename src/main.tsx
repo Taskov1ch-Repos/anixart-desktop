@@ -3,12 +3,21 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 
-import { loadAppZoom, applyAppZoom } from "./utils/settingsStore";
+import {
+	loadAppZoom,
+	applyAppZoom,
+	loadThemePreference,
+	applyTheme,
+	listenToSystemThemeChanges
+} from "./utils/settingsStore";
 
 const startApp = async () => {
 	const zoom = await loadAppZoom();
-
 	applyAppZoom(zoom);
+
+	const themePreference = await loadThemePreference();
+	applyTheme(themePreference);
+	listenToSystemThemeChanges(themePreference);
 
 	ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 		<React.StrictMode>
