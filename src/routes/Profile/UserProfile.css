@@ -78,6 +78,7 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	width: 100%;
 }
 
 .profile-login-badge {
@@ -87,6 +88,7 @@
 	gap: 0.5rem;
 	margin-bottom: 0.25rem;
 	flex-wrap: wrap;
+	min-height: 28px;
 }
 
 .profile-login {
@@ -95,12 +97,6 @@
 	color: var(--text-color);
 	margin: 0;
 	word-break: break-all;
-}
-
-.profile-badge img {
-	height: 24px;
-	width: auto;
-	vertical-align: middle;
 }
 
 .profile-status {
@@ -112,29 +108,99 @@
 	max-width: 100%;
 }
 
-.profile-privilege-level {
-	font-size: 0.8rem;
-	font-weight: 600;
-	padding: 0.1rem 0.4rem;
-	border-radius: 0.25rem;
-	display: inline-block;
+.profile-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 24px;
+	line-height: 24px;
+	position: relative;
+	min-width: 24px;
 	vertical-align: middle;
-	margin-right: 0.5rem;
 }
 
-.privilege-level-neutral {
-	background-color: #888;
-	color: #fff;
+.profile-badge img {
+	height: 100%;
+	width: auto;
+	object-fit: contain;
 }
 
-.privilege-level-positive {
-	background-color: #2ecc71;
-	color: #fff;
+.profile-badge>div {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	height: 100% !important;
+	max-width: 100%;
 }
 
-.privilege-level-negative {
-	background-color: var(--primary-color-hover);
-	color: #fff;
+.badge-shimmer {
+	width: 24px;
+	height: 24px;
+	background-color: var(--input-border);
+	border-radius: 4px;
+	position: relative;
+	overflow: hidden;
+}
+
+.badge-shimmer::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+	animation: shimmer 1.5s infinite linear;
+}
+
+@keyframes shimmer {
+	0% {
+		left: -100%;
+	}
+
+	100% {
+		left: 100%;
+	}
+}
+
+.badge-error {
+	color: var(--primary-color-hover);
+	font-weight: bold;
+	font-size: 1.2em;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	cursor: help;
+}
+
+.profile-friends-preview {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+	cursor: pointer;
+}
+
+.profile-friends-avatars {
+	display: flex;
+	align-items: center;
+}
+
+.profile-friend-avatar {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 2px solid var(--secondary-background);
+	object-fit: cover;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.profile-friends-count {
+	font-size: 0.85rem;
+	color: var(--navbar-icon-color);
+	font-weight: 500;
 }
 
 .profile-roles {
@@ -170,13 +236,27 @@
 	gap: 0.5rem;
 }
 
-.profile-details strong {
-	color: var(--text-color);
-	font-weight: 500;
-}
-
 .profile-details svg {
 	flex-shrink: 0;
+	width: 14px;
+	height: 14px;
+	vertical-align: middle;
+}
+
+.profile-privilege-level-text {
+	font-weight: 600;
+}
+
+.privilege-level-neutral {
+	color: #888;
+}
+
+.privilege-level-positive {
+	color: #2ecc71;
+}
+
+.privilege-level-negative {
+	color: var(--primary-color-hover);
 }
 
 .profile-stats {
@@ -207,6 +287,13 @@
 	display: flex;
 	gap: 0.5rem;
 	color: var(--navbar-icon-color);
+	align-items: center;
+}
+
+.profile-stats-item svg {
+	width: 14px;
+	height: 14px;
+	flex-shrink: 0;
 }
 
 .profile-stats-item span:last-child {
@@ -236,6 +323,7 @@
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.75rem;
+	align-items: center;
 }
 
 .profile-social-link {
@@ -275,7 +363,6 @@
 .profile-page-wrapper.error {
 	justify-content: center;
 	align-items: center;
-	padding-left: var(--navbar-width);
 }
 
 .profile-page-wrapper.loading .profile-sidebar,
@@ -291,22 +378,49 @@
 	justify-content: center;
 	align-items: center;
 	padding: 1.5rem 2rem;
+	height: 100%;
+	text-align: center;
 }
 
-.profile-main-content h1 {
+.profile-page-wrapper.loading .spinner {
+	width: 1.5rem;
+	height: 1.5rem;
+	border: 3px solid color-mix(in srgb, var(--primary-color) 30%, transparent);
+	border-top-color: var(--primary-color);
+	border-radius: 50%;
+	animation: page-spin 1s linear infinite;
+	margin-bottom: 0.75rem;
+}
+
+@keyframes page-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.profile-page-wrapper.error .profile-main-content h1 {
 	font-size: 1.5rem;
 	color: var(--primary-color-hover);
 	margin-bottom: 0.5rem;
+}
+
+.profile-content-placeholder {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	height: 100%;
+	color: var(--navbar-icon-color);
 }
 
 .profile-content-placeholder h2 {
 	font-size: 1.5rem;
 	color: var(--text-color);
 	margin-bottom: 1rem;
-	text-align: center;
 }
 
 .profile-content-placeholder p {
 	color: var(--navbar-icon-color);
-	text-align: center;
+	margin: 0.2rem 0;
 }
