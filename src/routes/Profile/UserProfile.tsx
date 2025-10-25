@@ -191,7 +191,7 @@ export const UserProfilePage: React.FC = () => {
 				if (err instanceof Error && err.message.includes("404")) {
 					setError(`Профиль с ID ${numericId} не найден.`);
 				} else {
-					setError("Не удалось загрузить профиль. Попробуйте позже.");
+					navigate("/", { state: { from: location.pathname }, replace: true });
 					console.error("Profile fetch error:", err);
 				}
 			} finally {

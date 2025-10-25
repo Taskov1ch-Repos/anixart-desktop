@@ -1,17 +1,24 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { pingServer } from "../../utils/pingServer";
 import { updateAnixartClient, getAnixartClient } from "../../client";
 import { Anixart } from "anixartjs";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import "./InitScreen.css";
 
 type InitStatus = "finding_endpoint" | "pinging" | "error" | "success";
+
+const ANIXART_STATUS = "https://anixart-app.com/status";
 
 export const InitScreen: React.FC = () => {
 	const [status, setStatus] = useState<InitStatus>("finding_endpoint");
 	const [message, setMessage] = useState("Поиск доступного сервера...");
 	const navigate = useNavigate();
+	const location = useLocation();
+
+	const isErrorState = location.state?.isNetworkError === true;
+	const previousPath = location.state?.from || "/home";
 
 	const findAndSetEndpoint = async () => {
 		setStatus("finding_endpoint");
@@ -35,7 +42,7 @@ export const InitScreen: React.FC = () => {
 					setMessage(`Сервер ${url} доступен!`);
 					updateAnixartClient(url);
 					setStatus("success");
-					setTimeout(() => navigate("/home"), 500);
+					setTimeout(() => navigate(previousPath, { replace: true, state: {} }), 500);
 					return;
 				}
 				setMessage(`Сервер ${url} недоступен.`);
@@ -51,34 +58,50 @@ export const InitScreen: React.FC = () => {
 		}
 	};
 
-	useEffect(() => {
-		setTimeout(findAndSetEndpoint, 100);
+	const handleRetry = useCallback(() => {
+		if (!isErrorState) {
+			findAndSetEndpoint();
+		} else {
+			navigate(previousPath, { replace: true, state: {} });
+		}
+	}, [navigate, previousPath, isErrorState]);
+
+	const openStatusPage = useCallback(() => {
+		openUrl(ANIXART_STATUS).catch(err => console.error("Failed to open status URL:", err));
 	}, []);
 
-	const handleRetry = () => {
-		if (status === "error") {
-			findAndSetEndpoint();
+	useEffect(() => {
+		if (isErrorState) {
+			setStatus("error");
+			setMessage("Не удалось связаться с сервером");
+		} else {
+			setTimeout(findAndSetEndpoint, 100);
 		}
-	};
+	}, [isErrorState]);
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			if (status === "error" && event.code === "Space") {
-				event.preventDefault();
-				handleRetry();
+			if (status !== "error") return;
+
+			if (event.code === "Space") {
+				if (event.ctrlKey || event.metaKey) {
+					event.preventDefault();
+					openStatusPage();
+				} else if (!event.shiftKey && !event.altKey) {
+					event.preventDefault();
+					handleRetry();
+				}
 			}
 		};
 
-		if (status === "error") {
+		if (status === 'error') {
 			window.addEventListener("keydown", handleKeyDown);
-			window.addEventListener("click", handleRetry);
 		}
 
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
-			window.removeEventListener("click", handleRetry);
 		};
-	}, [status]);
+	}, [status, handleRetry, openStatusPage]);
 
 	return (
 		<motion.div
@@ -86,8 +109,9 @@ export const InitScreen: React.FC = () => {
 			initial={{ opacity: 1 }}
 			exit={{ opacity: 0 }}
 			transition={{ duration: 0.5 }}
+			onClick={status === 'error' ? handleRetry : undefined}
 		>
-			<div className="splash-bg"></div>
+			<div className="splash-bg"></div> { }
 
 			<motion.div
 				className="splash-content"
@@ -95,8 +119,8 @@ export const InitScreen: React.FC = () => {
 				animate={{ opacity: 1, scale: 1 }}
 				transition={{ duration: 0.7, ease: "easeOut" }}
 			>
-				<div className="logo init-logo"></div>
-				<h1 className="logo-title">Anixart Desktop</h1>
+				<div className="logo init-logo"></div> {/* */}
+				<h1 className="logo-title">Anixart Desktop</h1> {/* */}
 
 				<AnimatePresence mode="wait">
 					{(status === "finding_endpoint" || status === "pinging") && (
@@ -107,7 +131,7 @@ export const InitScreen: React.FC = () => {
 							exit={{ opacity: 0 }}
 							className="status-indicator"
 						>
-							<div className="spinner"></div>
+							<div className="spinner"></div> {/* */}
 							<span>{message}</span>
 						</motion.div>
 					)}
@@ -128,6 +152,15 @@ export const InitScreen: React.FC = () => {
 								transition={{ delay: 0.5 }}
 							>
 								Нажмите [Пробел] или кликните для повтора
+							</motion.span>
+							<motion.span
+								className="retry-prompt"
+								initial={{ opacity: 0 }}
+								animate={{ opacity: 1 }}
+								transition={{ delay: 0.7 }}
+								style={{ marginTop: '0.5rem' }}
+							>
+								Нажмите [CTRL + Пробел] чтобы посмотреть состояние серверов
 							</motion.span>
 						</motion.div>
 					)}
