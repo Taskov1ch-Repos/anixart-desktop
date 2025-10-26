@@ -1,6 +1,6 @@
 .update-page {
 	width: 100%;
-	max-width: 900px;
+	max-width: 56.25rem;
 	margin: 0 auto;
 	padding: 1rem 2rem;
 	box-sizing: border-box;
@@ -59,7 +59,7 @@
 	border-radius: 0.5rem;
 	padding: 1rem;
 	margin-bottom: 1.5rem;
-	max-height: 400px;
+	max-height: 25rem;
 	overflow-y: auto;
 	line-height: 1.6;
 }
@@ -86,7 +86,7 @@
 .release-notes code {
 	background-color: #222;
 	padding: 0.1em 0.3em;
-	border-radius: 3px;
+	border-radius: 0.1875rem;
 	font-family: monospace;
 }
 

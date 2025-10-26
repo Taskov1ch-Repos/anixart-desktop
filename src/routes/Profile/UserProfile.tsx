@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../../hooks/useAuth";
 import { getAnixartClient } from "../../client";
 import { FullProfile } from "anixartjs/dist/classes/FullProfile";
 import { BaseProfile } from "anixartjs/dist/classes/BaseProfile";
-import { Player as LottiePlayer } from "@lottiefiles/react-lottie-player";
+import Lottie from "lottie-react";
 import { invoke } from "@tauri-apps/api/core";
 import {
 	FaVk, FaTelegramPlane, FaInstagram, FaTiktok, FaDiscord, FaCalendarAlt, FaClock, FaEye, FaHourglassHalf, FaShieldAlt
 } from "react-icons/fa";
 import { IoIosStats } from "react-icons/io";
 import "./UserProfile.css";
+import { IChannel } from "anixartjs";
 
-// Функция форматирования времени последней активности
 const formatLastActivity = (timestamp: number): string => {
 	const now = Date.now();
 	const lastActivityDate = new Date(timestamp * 1000);
@@ -40,14 +40,12 @@ const formatLastActivity = (timestamp: number): string => {
 	}
 };
 
-// Функция для получения CSS-класса в зависимости от уровня доверия
 const getPrivilegeLevelClass = (level: number): string => {
 	if (level > 0) return "privilege-level-positive";
 	if (level < 0) return "privilege-level-negative";
 	return "privilege-level-neutral";
 };
 
-// Функция форматирования времени просмотра
 const formatWatchedTime = (seconds: number): string => {
 	if (isNaN(seconds) || seconds < 0) return "Н/Д";
 	const days = Math.floor(seconds / (3600 * 24));
@@ -60,20 +58,18 @@ const formatWatchedTime = (seconds: number): string => {
 	return result.trim() || "0 м";
 };
 
-// Тип ответа от Rust команды fetch_badge_data
 interface FetchResponse {
 	content: string;
 }
 
-// Структура ошибки от Rust команды
 interface FetchError {
 	Network?: string;
 	Other?: string;
 }
 
-// Компонент для отображения значка профиля (Lottie или изображение)
 const ProfileBadge: React.FC<{ badgeUrl: string | null; badgeName: string | null }> = ({ badgeUrl, badgeName }) => {
 	const [badgeContent, setBadgeContent] = useState<string | null>(null);
+	const [lottieData, setLottieData] = useState<object | null>(null);
 	const [isLottie, setIsLottie] = useState<boolean>(false);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
@@ -81,8 +77,9 @@ const ProfileBadge: React.FC<{ badgeUrl: string | null; badgeName: string | null
 	useEffect(() => {
 		if (!badgeUrl) {
 			setBadgeContent(null);
+			setLottieData(null);
 			setError(null);
-			setIsLoading(false); // Make sure loading is false if no URL
+			setIsLoading(false);
 			return;
 		}
 
@@ -90,37 +87,43 @@ const ProfileBadge: React.FC<{ badgeUrl: string | null; badgeName: string | null
 			setIsLoading(true);
 			setError(null);
 			setBadgeContent(null);
-			const isLottieFile = badgeUrl.toLowerCase().endsWith('.json');
+			setLottieData(null);
+			const isLottieFile = badgeUrl.toLowerCase().endsWith(".json");
 			setIsLottie(isLottieFile);
 
 			try {
 				const response = await invoke<FetchResponse>("fetch_badge_data", { url: badgeUrl });
 				if (isLottieFile) {
-					JSON.parse(response.content); // Validate JSON
-					setBadgeContent(response.content);
+					try {
+						const parsedData = JSON.parse(response.content);
+						setLottieData(parsedData);
+					} catch (parseError) {
+						console.error("Failed to parse Lottie JSON:", parseError);
+						throw new Error("Некорректный формат Lottie JSON.");
+					}
 				} else {
-					setBadgeContent(badgeUrl); // Use original URL for images
+					setBadgeContent(badgeUrl);
 				}
 			} catch (err: any) {
-				console.error("Failed to fetch badge data via Tauri:", err);
+				console.error("Failed to fetch or parse badge data via Tauri:", err);
 				let errorMessage = "Не удалось загрузить значок.";
-				if (err && typeof err === 'object') {
+				if (err && typeof err === "object") {
 					const fetchErr = err as FetchError;
 					if (fetchErr.Network) errorMessage = `Ошибка сети: ${fetchErr.Network}`;
 					else if (fetchErr.Other) errorMessage = `Ошибка: ${fetchErr.Other}`;
-					else if (typeof err.message === 'string') errorMessage = err.message;
-				} else if (typeof err === 'string') {
+					else if (typeof err.message === "string") errorMessage = err.message;
+				} else if (typeof err === "string") {
 					errorMessage = err;
 				}
 				setError(errorMessage);
 				setBadgeContent(null);
+				setLottieData(null);
 			} finally {
 				setIsLoading(false);
 			}
 		};
 
 		loadBadge();
-
 	}, [badgeUrl]);
 
 	const title = badgeName ?? "Значок профиля";
@@ -129,15 +132,15 @@ const ProfileBadge: React.FC<{ badgeUrl: string | null; badgeName: string | null
 		<span className="profile-badge" title={isLoading ? "Загрузка..." : error ? error : title}>
 			{isLoading && <div className="badge-shimmer"></div>}
 			{!isLoading && error && <span className="badge-error">!</span>}
-			{!isLoading && !error && badgeContent && (
-				isLottie ? (
-					<LottiePlayer
-						autoplay
-						loop
-						src={JSON.parse(badgeContent)}
-						style={{ height: '100%', width: 'auto', display: 'block' }} // Adjusted style for container
+			{!isLoading && !error && (badgeContent || lottieData) && (
+				isLottie && lottieData ? (
+					<Lottie
+						animationData={lottieData}
+						loop={true}
+						autoplay={true}
+						style={{ height: "100%", width: "auto", display: "block" }}
 					/>
-				) : (
+				) : (badgeContent && !isLottie &&
 					<img src={badgeContent} alt={title} />
 				)
 			)}
@@ -145,12 +148,13 @@ const ProfileBadge: React.FC<{ badgeUrl: string | null; badgeName: string | null
 	);
 };
 
-// Основной компонент страницы профиля
 export const UserProfilePage: React.FC = () => {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const { userId: loggedInUserId, token, isLoading: authLoading, logout } = useAuth();
 	const [profileData, setProfileData] = useState<FullProfile | null>(null);
+	const [channelData, setChannelData] = useState<IChannel | null>(null);
 	const [friends, setFriends] = useState<BaseProfile[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -175,23 +179,41 @@ export const UserProfilePage: React.FC = () => {
 			setError(null);
 			setProfileData(null);
 			setFriends([]);
+			setChannelData(null);
+
 			try {
 				const client = getAnixartClient();
 				const profile = await client.getProfileById(numericId);
 				setProfileData(profile);
+
 				if (profile && !profile.isCountsHidden) {
 					try {
 						const fetchedFriends = await profile.getFriends(0);
 						setFriends(fetchedFriends);
 					} catch (friendError) {
+						navigate("/", { state: { isNetworkError: true, from: location.pathname }, replace: true });
 						console.error("Failed to fetch friends:", friendError);
 					}
 				}
+
+				if (profile) {
+					try {
+						const fetchedBlog = await client.endpoints.channel.getBlog(profile.id);
+						if (fetchedBlog.code === 0) {
+							setChannelData(fetchedBlog.channel);
+						}
+					} catch (blogError) {
+						navigate("/", { state: { isNetworkError: true, from: location.pathname }, replace: true });
+						console.error("Failed to fetch blog data:", blogError);
+					}
+				}
+
 			} catch (err: any) {
+				navigate("/", { state: { isNetworkError: true, from: location.pathname }, replace: true });
 				if (err instanceof Error && err.message.includes("404")) {
 					setError(`Профиль с ID ${numericId} не найден.`);
 				} else {
-					navigate("/", { state: { from: location.pathname }, replace: true });
+					setError("Не удалось загрузить профиль. Попробуйте позже.");
 					console.error("Profile fetch error:", err);
 				}
 			} finally {
@@ -199,8 +221,7 @@ export const UserProfilePage: React.FC = () => {
 			}
 		};
 		fetchProfile();
-	}, [id, numericId, loggedInUserId, token, isOwnProfile, navigate, authLoading]);
-
+	}, [id, numericId, loggedInUserId, token, isOwnProfile, navigate, authLoading, location.pathname]);
 
 	if (isLoading || authLoading) {
 		return (
@@ -260,10 +281,14 @@ export const UserProfilePage: React.FC = () => {
 			<aside className="profile-sidebar">
 				<div
 					className="profile-banner"
-					style={{ backgroundImage: profileData.theme_background_url ? `url(${profileData.theme_background_url})` : "none" }}
+					style={{
+						backgroundImage: channelData?.cover ? `url(${channelData.cover.toString()})` : (profileData.theme_background_url ? `url(${profileData.theme_background_url})` : "none"),
+						height: "7.5rem",
+						marginBottom: "-2.8125rem"
+					}}
 				></div>
 				<div className="profile-avatar-container">
-					<img src={profileData.avatar} alt={`${profileData.login}'s avatar`} className="profile-avatar" />
+					<img src={profileData.avatar} alt={`${profileData.login}"s avatar`} className="profile-avatar" />
 					{profileData.isOnline && <div className="profile-online-indicator"></div>}
 				</div>
 				<div className="profile-user-info">
@@ -288,7 +313,7 @@ export const UserProfilePage: React.FC = () => {
 									src={friend.avatar}
 									alt={friend.login}
 									className="profile-friend-avatar"
-									style={{ zIndex: 3 - index, marginLeft: index > 0 ? '-10px' : '0' }}
+									style={{ zIndex: 3 - index, marginLeft: index > 0 ? "-0.625rem" : "0" }}
 									title={friend.login}
 								/>
 							))}
@@ -315,7 +340,7 @@ export const UserProfilePage: React.FC = () => {
 						<FaCalendarAlt /> Зарегистрирован: {new Date(profileData.registerDate * 1000).toLocaleDateString()}
 					</p>
 					<p title="Последняя активность">
-						<FaClock /> Активность: {formatLastActivity(profileData.lastActivityTime)}
+						<FaClock /> Активность: {profileData.isOnline ? "Онлайн" : formatLastActivity(profileData.lastActivityTime)}
 					</p>
 					{profileData.isBanned && (
 						<p title={`Забанен до ${new Date(profileData.banExpires).toLocaleString()}`}>
