@@ -13,6 +13,7 @@ import {
 import { IoIosStats } from "react-icons/io";
 import "./UserProfile.css";
 import { IChannel } from "anixartjs";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
 const formatLastActivity = (timestamp: number): string => {
 	const now = Date.now();
@@ -40,7 +41,7 @@ const formatLastActivity = (timestamp: number): string => {
 	}
 };
 
-const getPrivilegeLevelClass = (level: number): string => {
+const getRatingScoreClass = (level: number): string => {
 	if (level > 0) return "privilege-level-positive";
 	if (level < 0) return "privilege-level-negative";
 	return "privilege-level-neutral";
@@ -161,6 +162,15 @@ export const UserProfilePage: React.FC = () => {
 
 	const numericId = id ? parseInt(id, 10) : null;
 	const isOwnProfile = numericId === loggedInUserId;
+
+	const handleOpenUrl = async (url: string) => {
+		if (!url) return;
+		try {
+			await openUrl(url);
+		} catch (err) {
+			console.error("Failed to open URL:", err);
+		}
+	};
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -332,8 +342,8 @@ export const UserProfilePage: React.FC = () => {
 				)}
 				<div className="profile-details">
 					<p title="Уровень доверия">
-						<FaShieldAlt /> Уровень доверия: <span className={`profile-privilege-level-text ${getPrivilegeLevelClass(profileData.privilegeLevel)}`}>
-							{profileData.privilegeLevel}
+						<FaShieldAlt /> Уровень доверия: <span className={`profile-privilege-level-text ${getRatingScoreClass(profileData.ratingScore)}`}>
+							{profileData.ratingScore}
 						</span>
 					</p>
 					<p title="Дата регистрации">
@@ -365,11 +375,57 @@ export const UserProfilePage: React.FC = () => {
 					<div className="profile-socials">
 						<h3><FaVk /> Социальные сети</h3>
 						<div className="profile-socials-links">
-							{profileData.vkPage && <a href={"https://vk.com/" + profileData.vkPage} target="_blank" rel="noopener noreferrer" className="profile-social-link" title="ВКонтакте"><FaVk size="1.5rem" /></a>}
-							{profileData.tgPage && <a href={profileData.tgPage} target="_blank" rel="noopener noreferrer" className="profile-social-link" title="Telegram"><FaTelegramPlane size="1.5rem" /></a>}
-							{profileData.instPage && <a href={profileData.instPage} target="_blank" rel="noopener noreferrer" className="profile-social-link" title="Instagram"><FaInstagram size="1.5rem" /></a>}
-							{profileData.ttPage && <a href={profileData.ttPage} target="_blank" rel="noopener noreferrer" className="profile-social-link" title="TikTok"><FaTiktok size="1.5rem" /></a>}
-							{profileData.discordPage && <span title={`Discord: ${profileData.discordPage}`} className="profile-social-link" style={{ cursor: "text" }}><FaDiscord size="1.5rem" /> {profileData.discordPage}</span>}
+
+							{profileData.vkPage && (
+								<a
+									onClick={() => handleOpenUrl("https://vk.com/" + profileData.vkPage)}
+									className="profile-social-link"
+									title="ВКонтакте"
+									style={{ cursor: "pointer" }}
+								>
+									<FaVk size="1.5rem" />
+								</a>
+							)}
+							{profileData.tgPage && (
+								<a
+									onClick={() => handleOpenUrl("https://t.me/" + profileData.tgPage)}
+									className="profile-social-link"
+									title="Telegram"
+									style={{ cursor: "pointer" }}
+								>
+									<FaTelegramPlane size="1.5rem" />
+								</a>
+							)}
+							{profileData.instPage && (
+								<a
+									onClick={() => handleOpenUrl("https://instagram.com/" + profileData.instPage)}
+									className="profile-social-link"
+									title="Instagram"
+									style={{ cursor: "pointer" }}
+								>
+									<FaInstagram size="1.5rem" />
+								</a>
+							)}
+							{profileData.ttPage && (
+								<a
+									onClick={() => handleOpenUrl("https://www.tiktok.com/@" + profileData.ttPage)}
+									className="profile-social-link"
+									title="TikTok"
+									style={{ cursor: "pointer" }}
+								>
+									<FaTiktok size="1.5rem" />
+								</a>
+							)}
+
+							{profileData.discordPage && (
+								<span
+									title={`Discord: ${profileData.discordPage}`}
+									className="profile-social-link"
+									style={{ cursor: "text" }}
+								>
+									<FaDiscord size="1.5rem" /> {profileData.discordPage}
+								</span>
+							)}
 						</div>
 					</div>
 				)}
