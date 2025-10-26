@@ -83,6 +83,11 @@ lazy_static! {
 
 #[tauri::command]
 fn rpc_connect() {
+    if RPC_CLIENT.lock().unwrap().is_some() {
+        println!("RPC: Уже подключено.");
+        return;
+    }
+
     let client_id = "1431984176097132726";
 
     match DiscordIpcClient::new(client_id) {
@@ -97,6 +102,28 @@ fn rpc_connect() {
         Err(e) => {
             println!("RPC: Не удалось создать клиент: {:?}", e);
         }
+    }
+}
+
+#[tauri::command]
+fn rpc_disconnect() {
+    if let Some(mut client) = RPC_CLIENT.lock().unwrap().take() {
+        if let Err(e) = client.clear_activity() {
+            println!(
+                "RPC: Не удалось очистить активность перед отключением: {:?}",
+                e
+            );
+        } else {
+            println!("RPC: Активность очищена перед отключением.");
+        }
+
+        if let Err(e) = client.close() {
+            println!("RPC: Не удалось закрыть соединение с Discord: {:?}", e);
+        } else {
+            println!("RPC: Соединение с Discord закрыто.");
+        }
+    } else {
+        println!("RPC: Не было активного подключения для закрытия.");
     }
 }
 
@@ -165,6 +192,7 @@ pub fn run() {
             greet,
             fetch_badge_data,
             rpc_connect,
+            rpc_disconnect,
             rpc_clear_activity,
             rpc_set_activity
         ])

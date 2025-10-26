@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { invoke } from "@tauri-apps/api/core";
 import {
 	applyAppZoom,
 	saveAppZoom,
@@ -7,7 +8,9 @@ import {
 	loadThemePreference,
 	saveThemePreference,
 	applyTheme,
-	listenToSystemThemeChanges
+	listenToSystemThemeChanges,
+	loadRpcPreference,
+	saveRpcPreference
 } from "../../utils/settingsStore";
 import "./Settings.css";
 
@@ -23,11 +26,15 @@ const getInitialZoom = (): number => {
 export const Settings: React.FC = () => {
 	const [scale, setScale] = useState(getInitialZoom);
 	const [currentTheme, setCurrentTheme] = useState<Theme>("system");
+	const [isRpcEnabled, setIsRpcEnabled] = useState<boolean>(true);
+	const [showRpcRestartWarning, setShowRpcRestartWarning] = useState<boolean>(false);
 
 	useEffect(() => {
 		loadThemePreference().then(savedTheme => {
 			setCurrentTheme(savedTheme);
-			listenToSystemThemeChanges(savedTheme);
+		});
+		loadRpcPreference().then(savedRpcPref => {
+			setIsRpcEnabled(savedRpcPref);
 		});
 	}, []);
 
@@ -47,6 +54,21 @@ export const Settings: React.FC = () => {
 			applyTheme(newTheme);
 			saveThemePreference(newTheme);
 			listenToSystemThemeChanges(newTheme);
+		}
+	};
+
+	const handleRpcToggleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const newRpcState = event.target.checked;
+		setIsRpcEnabled(newRpcState);
+		saveRpcPreference(newRpcState);
+		setShowRpcRestartWarning(false);
+
+		if (newRpcState) {
+			console.log("Settings: RPC preference enabled. Restart required.");
+			setShowRpcRestartWarning(true);
+		} else {
+			console.log("Settings: Disabling RPC");
+			invoke("rpc_disconnect").catch(console.error);
 		}
 	};
 
@@ -109,7 +131,32 @@ export const Settings: React.FC = () => {
 							</button>
 						</div>
 					</div>
+				</section>
 
+				<section className="settings-section">
+					<h2 className="section-title">Интеграции</h2>
+					<div className="setting-item">
+						<div className="setting-info">
+							<label htmlFor="rpc-toggle">Discord Rich Presence</label>
+							<p>Показывать вашу активность в Discord (если оно у вас установлено).</p>
+							{showRpcRestartWarning && (
+								<p className="setting-warning">
+									⚠️ Требуется перезапуск приложения для активации Discord RPC.
+								</p>
+							)}
+						</div>
+						<div className="setting-control toggle-control">
+							<label className="switch">
+								<input
+									type="checkbox"
+									id="rpc-toggle"
+									checked={isRpcEnabled}
+									onChange={handleRpcToggleChange}
+								/>
+								<span className="slider round"></span>
+							</label>
+						</div>
+					</div>
 				</section>
 			</div>
 		</motion.div>

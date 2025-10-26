@@ -3,9 +3,10 @@ import { LazyStore } from "@tauri-apps/plugin-store";
 const isTauri = !!(window as any).__TAURI__;
 
 export type Theme = "system" | "light" | "dark";
-const THEME_KEY = "appTheme";
 
+const THEME_KEY = "appTheme";
 const APP_ZOOM_KEY = "appZoom";
+const DISCORD_RPC_ENABLED_KEY = "discordRpcEnabled";
 
 let tauriStore: LazyStore | null = null;
 
@@ -132,5 +133,39 @@ export const listenToSystemThemeChanges = (currentPreference: Theme) => {
 
 	} else {
 		systemThemeListener = null;
+	}
+};
+
+export const loadRpcPreference = async (): Promise<boolean> => {
+	let enabled: boolean | undefined | null = undefined;
+	try {
+		if (isTauri) {
+			const store = getTauriStore();
+			enabled = await store?.get<boolean>(DISCORD_RPC_ENABLED_KEY) ?? true;
+		} else {
+			const enabledStr = localStorage.getItem(DISCORD_RPC_ENABLED_KEY);
+			enabled = enabledStr === null ? true : enabledStr === 'true';
+		}
+	} catch (error) {
+		console.error("Failed to load RPC preference, defaulting to true.", error);
+		enabled = true;
+	}
+
+	return !!enabled;
+};
+
+export const saveRpcPreference = async (enabled: boolean) => {
+	try {
+		if (isTauri) {
+			const store = getTauriStore();
+			if (store) {
+				await store.set(DISCORD_RPC_ENABLED_KEY, enabled);
+				await store.save();
+			} else { console.error("Tauri store is not available to save RPC preference."); }
+		} else {
+			localStorage.setItem(DISCORD_RPC_ENABLED_KEY, enabled.toString());
+		}
+	} catch (error) {
+		console.error("Failed to save RPC preference.", error);
 	}
 };
