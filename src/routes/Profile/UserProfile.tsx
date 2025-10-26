@@ -8,8 +8,9 @@ import { BaseProfile } from "anixartjs/dist/classes/BaseProfile";
 import Lottie from "lottie-react";
 import { invoke } from "@tauri-apps/api/core";
 import {
-	FaVk, FaTelegramPlane, FaInstagram, FaTiktok, FaDiscord, FaCalendarAlt, FaClock, FaEye, FaHourglassHalf, FaShieldAlt
+	FaVk, FaTelegramPlane, FaInstagram, FaTiktok, FaDiscord, FaCalendarAlt, FaClock, FaEye, FaHourglassHalf, FaShieldAlt, FaCrown
 } from "react-icons/fa";
+import { MdVerified } from "react-icons/md";
 import { IoIosStats } from "react-icons/io";
 import "./UserProfile.css";
 import { IChannel } from "anixartjs";
@@ -303,12 +304,20 @@ export const UserProfilePage: React.FC = () => {
 				</div>
 				<div className="profile-user-info">
 					<div className="profile-login-badge">
-						<h1 className="profile-login">
-							{profileData.login}
-							{profileData.isVerified && <span title="Верифицирован"> ✅</span>}
-							{profileData.isSponsor && <span title="Спонсор"> ✨</span>}
-						</h1>
+						<h1 className="profile-login">{profileData.login}</h1>
 						<ProfileBadge badgeUrl={profileData.badgeUrl} badgeName={profileData.badgeName} />
+					</div>
+					<div className="profile-status-indicators">
+						{profileData.isVerified && (
+							<span className="profile-role profile-status-indicator" title="Верифицирован">
+								<MdVerified color="var(--primary-color)" /> Верифицирован
+							</span>
+						)}
+						{profileData.isSponsor && (
+							<span className="profile-role profile-status-indicator" title="Спонсор">
+								<FaCrown color="#FFD700" /> Спонсор
+							</span>
+						)}
 					</div>
 					<p className="profile-status">
 						{profileData.status || "Нет статуса"}
@@ -334,7 +343,15 @@ export const UserProfilePage: React.FC = () => {
 				{profileData.roles?.length > 0 && (
 					<div className="profile-roles">
 						{profileData.roles.map((role, index) => (
-							<span key={index} className="profile-role" style={{ backgroundColor: role.color || "#888" }}>
+							<span
+								key={index}
+								className="profile-role"
+								style={{
+									backgroundColor: "#" + role.color ? `${"#" + role.color}40` : "#88888840",
+									border: `1px solid ${"#" + role.color || "#888"}`,
+									"--role-color": "#" + role.color || "#888"
+								} as React.CSSProperties}
+							>
 								{role.name}
 							</span>
 						))}

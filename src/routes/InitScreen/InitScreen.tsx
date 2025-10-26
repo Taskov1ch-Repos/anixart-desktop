@@ -94,7 +94,7 @@ export const InitScreen: React.FC = () => {
 			}
 		};
 
-		if (status === 'error') {
+		if (status === "error") {
 			window.addEventListener("keydown", handleKeyDown);
 		}
 
@@ -109,7 +109,7 @@ export const InitScreen: React.FC = () => {
 			initial={{ opacity: 1 }}
 			exit={{ opacity: 0 }}
 			transition={{ duration: 0.5 }}
-			onClick={status === 'error' ? handleRetry : undefined}
+			onClick={status === "error" ? handleRetry : undefined}
 		>
 			<div className="splash-bg"></div> { }
 
@@ -119,8 +119,8 @@ export const InitScreen: React.FC = () => {
 				animate={{ opacity: 1, scale: 1 }}
 				transition={{ duration: 0.7, ease: "easeOut" }}
 			>
-				<div className="logo init-logo"></div> {/* */}
-				<h1 className="logo-title">Anixart Desktop</h1> {/* */}
+				<div className="logo init-logo"></div> { }
+				<h1 className="logo-title">Anixart Desktop</h1> { }
 
 				<AnimatePresence mode="wait">
 					{(status === "finding_endpoint" || status === "pinging") && (
@@ -131,7 +131,7 @@ export const InitScreen: React.FC = () => {
 							exit={{ opacity: 0 }}
 							className="status-indicator"
 						>
-							<div className="spinner"></div> {/* */}
+							<div className="spinner"></div> { }
 							<span>{message}</span>
 						</motion.div>
 					)}
@@ -158,7 +158,7 @@ export const InitScreen: React.FC = () => {
 								initial={{ opacity: 0 }}
 								animate={{ opacity: 1 }}
 								transition={{ delay: 0.7 }}
-								style={{ marginTop: '0.5rem' }}
+								style={{ marginTop: "0.5rem" }}
 							>
 								Нажмите [CTRL + Пробел] чтобы посмотреть состояние серверов
 							</motion.span>

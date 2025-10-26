@@ -31,7 +31,7 @@
 }
 
 .profile-banner {
-	min-height: 7.5rem;
+	min-height: 8.5rem;
 	width: 100%;
 	background-color: var(--border-color);
 	background-size: cover;
@@ -47,6 +47,7 @@
 	margin-bottom: 0.75rem;
 	width: 6rem;
 	height: 6rem;
+	aspect-ratio: 1 / 1;
 }
 
 .profile-avatar {
@@ -95,6 +96,34 @@
 	color: var(--text-color);
 	margin: 0;
 	word-break: break-all;
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.profile-login svg {
+	vertical-align: middle;
+	margin-bottom: 0.1em;
+}
+
+.profile-status-indicator {
+	background-color: transparent !important;
+	border: none !important;
+	padding-bottom: 1.5rem !important;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.2em;
+	font-size: 0.9rem !important;
+	font-weight: 500;
+	border-radius: 1rem;
+}
+
+.profile-status-indicator[title="Верифицирован"] {
+	color: var(--primary-color);
+}
+
+.profile-status-indicator[title="Спонсор"] {
+	color: #FFD700;
 }
 
 .profile-status {
@@ -213,9 +242,13 @@
 	font-size: 0.75rem;
 	font-weight: 500;
 	padding: 0.2rem 0.5rem;
-	border-radius: 0.25rem;
-	color: #fff;
+	border-radius: 1rem;
+	color: var(--role-color);
+	border: 1px solid;
+	border-color: var(--role-color);
+	background-color: color-mix(in srgb, var(--role-color) 25%, transparent);
 }
+
 
 .profile-details {
 	font-size: 0.85rem;
