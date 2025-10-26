@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../../hooks/useAuth";
@@ -8,13 +8,15 @@ import { BaseProfile } from "anixartjs/dist/classes/BaseProfile";
 import Lottie from "lottie-react";
 import { invoke } from "@tauri-apps/api/core";
 import {
-	FaVk, FaTelegramPlane, FaInstagram, FaTiktok, FaDiscord, FaCalendarAlt, FaClock, FaEye, FaHourglassHalf, FaShieldAlt, FaCrown
+	FaVk, FaTelegramPlane, FaInstagram, FaTiktok, FaDiscord, FaCalendarAlt, FaClock, FaEye, FaHourglassHalf, FaShieldAlt, FaCrown,
+	FaUserPlus, FaUserMinus
 } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import { IoIosStats } from "react-icons/io";
 import "./UserProfile.css";
 import { IChannel } from "anixartjs";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { FriendsContent } from "../../components/FriendsContent/FriendsContent";
 
 const formatLastActivity = (timestamp: number): string => {
 	const now = Date.now();
@@ -161,6 +163,9 @@ export const UserProfilePage: React.FC = () => {
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
+	type ProfileTab = "friends" | "bookmarks" | "history";
+	const [activeTab, setActiveTab] = useState<ProfileTab>("friends");
+
 	const numericId = id ? parseInt(id, 10) : null;
 	const isOwnProfile = numericId === loggedInUserId;
 
@@ -191,6 +196,7 @@ export const UserProfilePage: React.FC = () => {
 			setProfileData(null);
 			setFriends([]);
 			setChannelData(null);
+			setActiveTab("friends");
 
 			try {
 				const client = getAnixartClient();
@@ -200,11 +206,12 @@ export const UserProfilePage: React.FC = () => {
 				if (profile && !profile.isCountsHidden) {
 					try {
 						const fetchedFriends = await profile.getFriends(0);
-						setFriends(fetchedFriends);
+						setFriends(fetchedFriends.slice(0, 3));
 					} catch (friendError) {
-						navigate("/", { state: { isNetworkError: true, from: location.pathname }, replace: true });
-						console.error("Failed to fetch friends:", friendError);
+						console.error("Failed to fetch friends preview:", friendError);
 					}
+				} else {
+					setFriends([]);
 				}
 
 				if (profile) {
@@ -233,6 +240,83 @@ export const UserProfilePage: React.FC = () => {
 		};
 		fetchProfile();
 	}, [id, numericId, loggedInUserId, token, isOwnProfile, navigate, authLoading, location.pathname]);
+
+	/**
+	 * Обработчик для кнопки "Добавить/Удалить из друзей"
+	 */
+	const handleFriendRequest = async () => {
+		if (!profileData || !token) return;
+
+		const client = getAnixartClient();
+		const targetUserId = profileData.id;
+
+		try {
+			let response: { friend_status: number | null };
+
+			if (profileData.friendStatus === null || profileData.friendStatus === 1) {
+				response = await client.endpoints.profile.sendFriendRequest(targetUserId);
+			} else {
+				response = await client.endpoints.profile.removeFriendRequest(targetUserId);
+			}
+
+			setProfileData(prevData => {
+				if (!prevData) return null;
+
+				const newProfileInstance = Object.assign(
+					Object.create(Object.getPrototypeOf(prevData)),
+					prevData
+				);
+
+				newProfileInstance.friendStatus = response.friend_status;
+
+				return newProfileInstance;
+			});
+
+		} catch (err) {
+			console.error("Failed to update friend status:", err);
+		}
+	};
+
+	/**
+	 * Определяет текст, иконку и состояние кнопки "В друзья"
+	 */
+	const getFriendButtonProps = () => {
+		if (!profileData) return null;
+
+		const { friendStatus, isFriendRequestsDisallowed } = profileData;
+
+		if (isFriendRequestsDisallowed) {
+			return {
+				text: "Заявки отключены",
+				icon: <FaUserPlus />,
+				disabled: true,
+				className: "friend-button-disabled"
+			};
+		}
+
+		if (friendStatus === null || friendStatus === 1) {
+			return {
+				text: friendStatus === 1 ? "Принять заявку" : "Добавить в друзья",
+				icon: <FaUserPlus />,
+				disabled: false,
+				className: "friend-button-add"
+			};
+		}
+
+		if (friendStatus === 0 || friendStatus === 2) {
+			return {
+				text: friendStatus === 0 ? "Отменить заявку" : "Удалить из друзей",
+				icon: <FaUserMinus />,
+				disabled: false,
+				className: "friend-button-remove"
+			};
+		}
+
+		return null;
+	};
+
+	const friendButtonProps = (token && !isOwnProfile) ? getFriendButtonProps() : null;
+
 
 	if (isLoading || authLoading) {
 		return (
@@ -282,6 +366,22 @@ export const UserProfilePage: React.FC = () => {
 		);
 	}
 
+	/**
+	 * Рендер контента для активной вкладки
+	 */
+	const renderMainContent = () => {
+		switch (activeTab) {
+			case "friends":
+				return <FriendsContent profile={profileData} />;
+			case "bookmarks":
+				return <div className="profile-content-placeholder"><p>Закладки (в разработке)</p></div>;
+			case "history":
+				return <div className="profile-content-placeholder"><p>История (в разработке)</p></div>;
+			default:
+				return null;
+		}
+	};
+
 	return (
 		<motion.div
 			className="profile-page-wrapper"
@@ -290,14 +390,14 @@ export const UserProfilePage: React.FC = () => {
 			transition={{ duration: 0.3 }}
 		>
 			<aside className="profile-sidebar">
-				<div
+				{channelData && <div
 					className="profile-banner"
 					style={{
 						backgroundImage: channelData?.cover ? `url(${channelData.cover.toString()})` : (profileData.theme_background_url ? `url(${profileData.theme_background_url})` : "none"),
 						height: "7.5rem",
 						marginBottom: "-2.8125rem"
 					}}
-				></div>
+				></div>}
 				<div className="profile-avatar-container">
 					<img src={profileData.avatar} alt={`${profileData.login}"s avatar`} className="profile-avatar" />
 					{profileData.isOnline && <div className="profile-online-indicator"></div>}
@@ -305,12 +405,12 @@ export const UserProfilePage: React.FC = () => {
 				<div className="profile-user-info">
 					<div className="profile-login-badge">
 						<h1 className="profile-login">{profileData.login}</h1>
-						<ProfileBadge badgeUrl={profileData.badgeUrl} badgeName={profileData.badgeName} />
+						{profileData.badgeId && <ProfileBadge badgeUrl={profileData.badgeUrl} badgeName={profileData.badgeName} />}
 					</div>
 					<div className="profile-status-indicators">
 						{profileData.isVerified && (
 							<span className="profile-role profile-status-indicator" title="Верифицирован">
-								<MdVerified color="var(--primary-color)" /> Верифицирован
+								<MdVerified /> Верифицирован
 							</span>
 						)}
 						{profileData.isSponsor && (
@@ -322,11 +422,25 @@ export const UserProfilePage: React.FC = () => {
 					<p className="profile-status">
 						{profileData.status || "Нет статуса"}
 					</p>
+
+					{/* Кнопка "В друзья" */}
+					{friendButtonProps && (
+						<button
+							className={`profile-action-button ${friendButtonProps.className}`}
+							onClick={handleFriendRequest}
+							disabled={friendButtonProps.disabled}
+							title={friendButtonProps.text}
+						>
+							{friendButtonProps.icon}
+							<span>{friendButtonProps.text}</span>
+						</button>
+					)}
+
 				</div>
 				{!profileData.isCountsHidden && profileData.friendCount > 0 && (
 					<div className="profile-friends-preview">
 						<div className="profile-friends-avatars">
-							{friends.slice(0, 3).map((friend, index) => (
+							{friends.map((friend, index) => (
 								<img
 									key={friend.id}
 									src={friend.avatar}
@@ -453,10 +567,28 @@ export const UserProfilePage: React.FC = () => {
 				)}
 			</aside>
 			<main className="profile-main-content">
-				<div className="profile-content-placeholder">
-					<h2>Контент профиля</h2>
-					<p>Здесь будут отображаться закладки, история, коллекции и другая информация пользователя.</p>
-					<p>(В разработке)</p>
+				<div className="profile-content-tabs">
+					<button
+						className={`profile-tab ${activeTab === 'friends' ? 'active' : ''}`}
+						onClick={() => setActiveTab('friends')}
+					>
+						Друзья
+					</button>
+					<button
+						className={`profile-tab ${activeTab === 'bookmarks' ? 'active' : ''}`}
+						onClick={() => setActiveTab('bookmarks')}
+					>
+						Закладки
+					</button>
+					<button
+						className={`profile-tab ${activeTab === 'history' ? 'active' : ''}`}
+						onClick={() => setActiveTab('history')}
+					>
+						История
+					</button>
+				</div>
+				<div className="profile-content-body">
+					{renderMainContent()}
 				</div>
 			</main>
 		</motion.div>

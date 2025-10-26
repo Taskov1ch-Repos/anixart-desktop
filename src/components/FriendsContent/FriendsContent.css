@@ -1,0 +1,130 @@
+.friends-content-wrapper {
+	padding: 1.5rem;
+	overflow-y: auto;
+	height: 100%;
+	box-sizing: border-box;
+}
+
+.friends-content-title {
+	margin-top: 0;
+	margin-bottom: 1rem;
+	color: var(--main-text-color);
+	font-weight: 600;
+	font-size: 1.25rem;
+}
+
+.friends-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+	gap: 1rem;
+}
+
+.friend-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 0.75rem;
+	border-radius: 8px;
+	background-color: var(--secondary-bg);
+	transition: background-color 0.2s;
+	text-decoration: none;
+	color: var(--main-text-color);
+}
+
+.friend-card:hover {
+	background-color: var(--hover-bg);
+}
+
+.friend-avatar {
+	width: 80px;
+	height: 80px;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 2px solid var(--border-color);
+}
+
+.friend-info {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	margin-top: 0.5rem;
+	position: relative;
+	width: 100%;
+	justify-content: center;
+}
+
+.friend-login {
+	font-size: 0.9rem;
+	font-weight: 500;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	max-width: 90px;
+}
+
+.friend-online-indicator {
+	width: 8px;
+	height: 8px;
+	background-color: var(--online-color);
+	border-radius: 50%;
+	border: 1px solid var(--secondary-bg);
+	flex-shrink: 0;
+}
+
+.verifed {
+	color: var(--primary-color);
+}
+
+.friends-content-placeholder {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	color: var(--secondary-text-color);
+	padding: 2rem;
+	box-sizing: border-box;
+}
+
+.load-more-button {
+	display: block;
+	width: 100%;
+	max-width: 300px;
+	margin: 1.5rem auto 0;
+	padding: 0.75rem;
+	font-weight: 600;
+	color: white;
+	background-color: var(--primary-color);
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.load-more-button:hover {
+	background-color: var(--primary-color-hover);
+}
+
+.load-more-button:disabled {
+	background-color: var(--secondary-text-color);
+	cursor: not-allowed;
+}
+
+.friends-loading-spinner {
+	display: flex;
+	justify-content: center;
+	padding: 2rem;
+}
+
+.friends-loading-spinner .spinner {
+	width: 40px;
+	height: 40px;
+	border: 4px solid var(--border-color);
+	border-top-color: var(--primary-color);
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+}
+
+.friends-error-message {
+	text-align: center;
+	color: var(--error-color);
+}
