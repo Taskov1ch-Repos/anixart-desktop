@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../../hooks/useAuth";
 import { getAnixartClient } from "../../client";
 import { FullProfile } from "anixartjs/dist/classes/FullProfile";
@@ -169,6 +169,21 @@ export const UserProfilePage: React.FC = () => {
 	const numericId = id ? parseInt(id, 10) : null;
 	const isOwnProfile = numericId === loggedInUserId;
 
+	const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
+
+	const handleLogoutClick = () => {
+		setShowLogoutConfirm(true);
+	};
+
+	const handleConfirmLogout = () => {
+		logout();
+		setShowLogoutConfirm(false);
+	};
+
+	const handleCancelLogout = () => {
+		setShowLogoutConfirm(false);
+	};
+
 	const handleOpenUrl = async (url: string) => {
 		if (!url) return;
 		try {
@@ -241,9 +256,6 @@ export const UserProfilePage: React.FC = () => {
 		fetchProfile();
 	}, [id, numericId, loggedInUserId, token, isOwnProfile, navigate, authLoading, location.pathname]);
 
-	/**
-	 * Обработчик для кнопки "Добавить/Удалить из друзей"
-	 */
 	const handleFriendRequest = async () => {
 		if (!profileData || !token) return;
 
@@ -277,9 +289,6 @@ export const UserProfilePage: React.FC = () => {
 		}
 	};
 
-	/**
-	 * Определяет текст, иконку и состояние кнопки "В друзья"
-	 */
 	const getFriendButtonProps = () => {
 		if (!profileData) return null;
 
@@ -316,7 +325,6 @@ export const UserProfilePage: React.FC = () => {
 	};
 
 	const friendButtonProps = (token && !isOwnProfile) ? getFriendButtonProps() : null;
-
 
 	if (isLoading || authLoading) {
 		return (
@@ -366,9 +374,6 @@ export const UserProfilePage: React.FC = () => {
 		);
 	}
 
-	/**
-	 * Рендер контента для активной вкладки
-	 */
 	const renderMainContent = () => {
 		switch (activeTab) {
 			case "friends":
@@ -560,7 +565,7 @@ export const UserProfilePage: React.FC = () => {
 					</div>
 				)}
 				{isOwnProfile && (
-					<button onClick={logout} className="logout-button">
+					<button onClick={handleLogoutClick} className="logout-button">
 						Выйти
 					</button>
 				)}
@@ -590,6 +595,41 @@ export const UserProfilePage: React.FC = () => {
 					{renderMainContent()}
 				</div>
 			</main>
+
+			<AnimatePresence>
+				{showLogoutConfirm && (
+					<motion.div
+						className="logout-modal-overlay"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						onClick={handleCancelLogout}
+					>
+						<motion.div
+							className="logout-modal-content"
+							initial={{ scale: 0.9, opacity: 0 }}
+							animate={{ scale: 1, opacity: 1 }}
+							exit={{ scale: 0.9, opacity: 0 }}
+							onClick={(e) => e.stopPropagation()}
+						>
+							<h2>Подтверждение</h2>
+							<p>Вы уверены, что хотите выйти из аккаунта?</p>
+							<div className="logout-modal-buttons">
+								<button onClick={handleCancelLogout} className="modal-button cancel">
+									Отмена
+								</button>
+								<button onClick={handleConfirmLogout} className="modal-button confirm">
+									Выйти
+								</button>
+							</div>
+						</motion.div>
+					</motion.div>
+				)}
+			</AnimatePresence>
 		</motion.div>
 	);
 };
+
+function logout() {
+	throw new Error("Function not implemented.");
+}
