@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
+import { DevAddressBar } from "./components/DevAddressBar/DevAddressBar";
 
 import {
 	loadAppZoom,
@@ -19,9 +20,12 @@ const startApp = async () => {
 	applyTheme(themePreference);
 	listenToSystemThemeChanges(themePreference);
 
+	const isDevelopment = import.meta.env.DEV;
+
 	ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 		<React.StrictMode>
 			<BrowserRouter>
+				{isDevelopment && <DevAddressBar />}
 				<App />
 			</BrowserRouter>
 		</React.StrictMode>
