@@ -15,6 +15,7 @@ import { checkForUpdates } from "./utils/updateChecker";
 import { About } from "./routes/About/About";
 import { useAuth } from "./hooks/useAuth";
 import "./App.css";
+import { applyAppZoom, applyTheme, listenToSystemThemeChanges, loadAppZoom, loadThemePreference } from "./utils/settingsStore";
 
 const AppRoutes: React.FC = () => {
 	const location = useLocation();
@@ -68,5 +69,29 @@ const AppRoutes: React.FC = () => {
 };
 
 export const App: React.FC = () => {
+	useEffect(() => {
+		const initializeSettings = async () => {
+			try {
+				const savedZoom = await loadAppZoom();
+				applyAppZoom(savedZoom);
+				console.log(`Initial zoom applied: ${savedZoom}%`);
+
+				const savedTheme = await loadThemePreference();
+				applyTheme(savedTheme);
+				listenToSystemThemeChanges(savedTheme);
+				console.log(`Initial theme applied: ${savedTheme}`);
+
+			} catch (error) {
+				console.error("Failed to initialize settings:", error);
+				applyAppZoom(100);
+				applyTheme("system");
+				listenToSystemThemeChanges("system");
+			}
+		};
+
+		initializeSettings();
+
+	}, []);
+
 	return <AppRoutes />;
 };

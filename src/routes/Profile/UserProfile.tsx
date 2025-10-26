@@ -423,7 +423,6 @@ export const UserProfilePage: React.FC = () => {
 						{profileData.status || "Нет статуса"}
 					</p>
 
-					{/* Кнопка "В друзья" */}
 					{friendButtonProps && (
 						<button
 							className={`profile-action-button ${friendButtonProps.className}`}

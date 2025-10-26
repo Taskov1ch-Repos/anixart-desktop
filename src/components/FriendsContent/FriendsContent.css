@@ -15,7 +15,7 @@
 
 .friends-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(6.25rem, 1fr));
 	gap: 1rem;
 }
 
@@ -24,7 +24,7 @@
 	flex-direction: column;
 	align-items: center;
 	padding: 0.75rem;
-	border-radius: 8px;
+	border-radius: 0.5rem;
 	background-color: var(--secondary-bg);
 	transition: background-color 0.2s;
 	text-decoration: none;
@@ -36,11 +36,11 @@
 }
 
 .friend-avatar {
-	width: 80px;
-	height: 80px;
+	width: 5rem;
+	height: 5rem;
 	border-radius: 50%;
 	object-fit: cover;
-	border: 2px solid var(--border-color);
+	border: 0.125rem solid var(--border-color);
 }
 
 .friend-info {
@@ -59,15 +59,15 @@
 	text-overflow: ellipsis;
 	overflow: hidden;
 	white-space: nowrap;
-	max-width: 90px;
+	max-width: 5.625rem;
 }
 
 .friend-online-indicator {
-	width: 8px;
-	height: 8px;
+	width: 0.5rem;
+	height: 0.5rem;
 	background-color: var(--online-color);
 	border-radius: 50%;
-	border: 1px solid var(--secondary-bg);
+	border: 0.0625rem solid var(--secondary-bg);
 	flex-shrink: 0;
 }
 
@@ -88,14 +88,14 @@
 .load-more-button {
 	display: block;
 	width: 100%;
-	max-width: 300px;
+	max-width: 18.75rem;
 	margin: 1.5rem auto 0;
 	padding: 0.75rem;
 	font-weight: 600;
 	color: white;
 	background-color: var(--primary-color);
 	border: none;
-	border-radius: 8px;
+	border-radius: 0.5rem;
 	cursor: pointer;
 	transition: background-color 0.2s;
 }
@@ -116,9 +116,9 @@
 }
 
 .friends-loading-spinner .spinner {
-	width: 40px;
-	height: 40px;
-	border: 4px solid var(--border-color);
+	width: 2.5rem;
+	height: 2.5rem;
+	border: 0.25rem solid var(--border-color);
 	border-top-color: var(--primary-color);
 	border-radius: 50%;
 	animation: spin 1s linear infinite;
