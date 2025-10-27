@@ -19,7 +19,14 @@
 			}
 		],
 		"security": {
-			"csp": null
+			"csp": null,
+			"assetProtocol": {
+				"enable": true,
+				"scope": [
+					"$APPDATA/media_cache/**",
+					"$RESOURCE/**"
+				]
+			}
 		}
 	},
 	"bundle": {

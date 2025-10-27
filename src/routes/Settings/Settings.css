@@ -245,3 +245,71 @@ html[data-theme="dark"] .switch input:focus+.slider {
 	margin-top: 0.5rem !important;
 	font-weight: 500;
 }
+
+/* --- Стили для баннера перезапуска --- */
+.restart-prompt-container {
+	position: fixed;
+	bottom: 1rem;
+	/* Отступ снизу */
+	left: var(--navbar-width);
+	/* Чтобы не заезжал под навбар */
+	right: 1rem;
+	/* Отступ справа */
+	z-index: 1000;
+	display: flex;
+	justify-content: center;
+	/* Центрируем содержимое баннера */
+}
+
+.restart-prompt {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	background-color: var(--tooltip-bg);
+	/* Темный фон */
+	color: var(--tooltip-text);
+	/* Светлый текст */
+	padding: 0.75rem 1.25rem;
+	border-radius: 0.5rem;
+	border: 1px solid var(--tooltip-border);
+	/* Граница как у тултипов */
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+	max-width: 40rem;
+	/* Ограничим ширину */
+	width: 100%;
+}
+
+.restart-prompt p {
+	margin: 0;
+	font-size: 0.9rem;
+	font-weight: 500;
+	flex-grow: 1;
+	/* Чтобы текст занимал доступное место */
+}
+
+.restart-button {
+	padding: 0.4rem 0.8rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	border-radius: 0.375rem;
+	border: none;
+	background-color: var(--primary-color);
+	color: #fff;
+	cursor: pointer;
+	transition: background-color 0.2s ease, transform 0.1s ease;
+	white-space: nowrap;
+	/* Чтобы текст кнопки не переносился */
+	flex-shrink: 0;
+	/* Чтобы кнопка не сжималась */
+}
+
+.restart-button:hover {
+	background-color: var(--primary-color-hover);
+}
+
+.restart-button:active {
+	transform: scale(0.97);
+}
+
+/* --- Конец стилей для баннера --- */

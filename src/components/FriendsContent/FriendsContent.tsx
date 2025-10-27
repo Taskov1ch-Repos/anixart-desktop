@@ -4,6 +4,7 @@ import { FullProfile } from "anixartjs/dist/classes/FullProfile";
 import { Link } from "react-router-dom";
 import "./FriendsContent.css";
 import { MdVerified } from "react-icons/md";
+import { CachedMedia } from "../CachedMedia/CachedMedia";
 
 interface FriendsContentProps {
 	profile: FullProfile;
@@ -11,7 +12,7 @@ interface FriendsContentProps {
 
 const FriendCard: React.FC<{ friend: BaseProfile }> = ({ friend }) => (
 	<Link to={`/profile/${friend.id}`} className="friend-card">
-		<img src={friend.avatar} alt={friend.login} className="friend-avatar" />
+		<CachedMedia src={friend.avatar} alt={friend.login} className="friend-avatar" type="image" />
 		<div className="friend-info">
 			{friend.isVerified && <MdVerified className="verifed" title="Верифицирован" />}
 			<span className="friend-login" title={friend.login}>{friend.login}</span>

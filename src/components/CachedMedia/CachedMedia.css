@@ -1,0 +1,135 @@
+/* Базовый элемент img или div-плейсхолдер для img */
+.cached-media-element,
+.cached-media-placeholder {
+	display: inline-block;
+	/* Или block, если нужно */
+	vertical-align: middle;
+	/* Размеры и object-fit должны задаваться ВНЕШНИМИ стилями (например, .friend-avatar) */
+	/* background-color: transparent; /* Убираем фон по умолчанию */
+	overflow: hidden;
+	/* Обрезаем шиммер/ошибку */
+	position: relative;
+	/* Для позиционирования шиммера/ошибки */
+}
+
+/* Стили для ПЛЕЙСХОЛДЕРА (когда img еще грузится или ошибка) */
+.cached-media-placeholder {
+	background-color: var(--border-color, #ccc);
+	/* Фон для плейсхолдера */
+	/* Убедимся, что плейсхолдер занимает место */
+	min-width: 1em;
+	/* Минимальный размер, чтобы было видно */
+	min-height: 1em;
+	/* Важно: aspect-ratio лучше задавать снаружи, если он известен */
+	/* aspect-ratio: 1 / 1; */
+}
+
+/* Стили для реального img после загрузки */
+.cached-media-element {
+	/* Можно добавить общие стили для загруженного img, если нужно */
+	transition: opacity 0.4s ease;
+	/* Плавное появление через opacity */
+	background: none !important;
+	/* Убираем фон после загрузки */
+
+}
+
+.cached-media-element:not([src]),
+/* Скрыть, если нет src (может быть в момент установки) */
+.cached-media-element[src=""] {
+	opacity: 0;
+}
+
+
+/* --- Шиммер и Ошибка (остаются почти без изменений) --- */
+.cached-media-shimmer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: color-mix(in srgb, var(--text-color, #1a1a1a) 15%, transparent);
+	background-image: linear-gradient(90deg,
+			transparent 20%,
+			color-mix(in srgb, var(--text-color, #1a1a1a) 25%, transparent) 50%,
+			transparent 80%);
+	background-size: 200% 100%;
+	animation: shimmer-animation 1.8s infinite linear;
+	z-index: 1;
+}
+
+@keyframes shimmer-animation {
+	0% {
+		background-position: 100% 0;
+	}
+
+	100% {
+		background-position: -100% 0;
+	}
+}
+
+.cached-media-error {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	color: var(--primary-color-hover, red);
+	font-weight: bold;
+	font-size: 1.2em;
+	/* Можно настроить */
+	z-index: 2;
+	cursor: help;
+	user-select: none;
+	line-height: 1;
+	/* Чтобы ! был по центру */
+}
+
+.cached-media-placeholder.error .cached-media-error {
+	/* Стили ошибки внутри плейсхолдера */
+	color: var(--primary-color-hover, red);
+}
+
+.cached-media-placeholder:not(.loading):not(.error) .cached-media-error {
+	/* Стиль для знака '?' в случае фолбэка */
+	color: var(--navbar-icon-color);
+	font-size: 1.5em;
+}
+
+
+/* --- Стили для Lottie (обертка остается) --- */
+.cached-media-wrapper.lottie {
+	display: inline-block;
+	/* Или block */
+	vertical-align: middle;
+	overflow: hidden;
+	position: relative;
+	width: 100%;
+	/* Lottie обычно занимает всю обертку */
+	height: 100%;
+	background-color: transparent;
+	/* Убираем фон обертки */
+}
+
+.cached-media-wrapper.lottie.loading,
+.cached-media-wrapper.lottie.error {
+	background-color: var(--border-color, #ccc);
+	/* Фон для плейсхолдера Lottie */
+}
+
+
+/* Убираем лишний класс и стили, если они были */
+/* .cached-media-content { ... } */
+/* object-fit: contain; из базовых классов удален */
+
+/* ----- */
+
+/* Пример использования внешних стилей (НЕ МЕНЯТЬ, просто для контекста) */
+/* В FriendsContent.css */
+/* .friend-avatar {
+    width: 5rem;
+    height: 5rem;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 0.125rem solid var(--border-color);
+    background-color: var(--border-color); /* Фон на время загрузки
+} */
