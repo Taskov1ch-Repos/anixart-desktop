@@ -3,6 +3,11 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"author": {
+		"name": "Taskov1ch",
+		"url": "https://taskov1ch.github.io",
+		"email": "sudo.taskov1ch@gmail.com"
+	},
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc && vite build",
