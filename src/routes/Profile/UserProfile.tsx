@@ -48,6 +48,8 @@ const formatWatchedTime = (sec: number): string => {
 	return `${d ? `${d} д ` : ""}${h ? `${h} ч ` : ""}${m ? `${m} м` : ""}`.trim() || "0 м";
 };
 
+type ProfileTab = "summary" | "friends" | "bookmarks" | "history";
+
 export const UserProfilePage: React.FC = () => {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
@@ -60,7 +62,7 @@ export const UserProfilePage: React.FC = () => {
 	const [error, setError] = useState<string | null>(null);
 	const [cachedBannerUrl, setCachedBannerUrl] = useState<string | null>(null);
 	const [isBannerLoading, setIsBannerLoading] = useState(false);
-	const [activeTab, setActiveTab] = useState<"friends" | "bookmarks" | "history">("friends");
+	const [activeTab, setActiveTab] = useState<ProfileTab>("summary");
 	const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
 	const numericId = id ? parseInt(id, 10) : null;
@@ -85,7 +87,7 @@ export const UserProfilePage: React.FC = () => {
 			setFriends([]);
 			setChannelData(null);
 			setCachedBannerUrl(null);
-			setActiveTab("friends");
+			setActiveTab("summary");
 
 			try {
 				const client = getAnixartClient();
@@ -146,7 +148,13 @@ export const UserProfilePage: React.FC = () => {
 			if (profileData.friendStatus === null || profileData.friendStatus === 1)
 				res = await client.endpoints.profile.sendFriendRequest(id);
 			else res = await client.endpoints.profile.removeFriendRequest(id);
-			setProfileData(prev => prev ? { ...prev, friendStatus: res.friend_status } : null);
+
+			setProfileData(prev => {
+				if (!prev) return null;
+				const updatedProfileData = Object.assign(Object.create(Object.getPrototypeOf(prev)), prev);
+				updatedProfileData.friendStatus = res.friend_status;
+				return updatedProfileData;
+			});
 		} catch { }
 	};
 
@@ -194,6 +202,7 @@ export const UserProfilePage: React.FC = () => {
 	};
 
 	const renderContent = () => {
+		if (activeTab === "summary") return <div className="profile-content-placeholder"><p>Сводка (в разработке)</p></div>;
 		if (activeTab === "friends") return <FriendsContent profile={profileData} />;
 		if (activeTab === "bookmarks") return <div className="profile-content-placeholder"><p>Закладки (в разработке)</p></div>;
 		if (activeTab === "history") return <div className="profile-content-placeholder"><p>История (в разработке)</p></div>;
@@ -275,6 +284,7 @@ export const UserProfilePage: React.FC = () => {
 
 			<main className="profile-main-content">
 				<div className="profile-content-tabs">
+					<button className={`profile-tab ${activeTab === "summary" ? "active" : ""}`} onClick={() => setActiveTab("summary")}>Сводка</button>
 					<button className={`profile-tab ${activeTab === "friends" ? "active" : ""}`} onClick={() => setActiveTab("friends")}>Друзья</button>
 					<button className={`profile-tab ${activeTab === "bookmarks" ? "active" : ""}`} onClick={() => setActiveTab("bookmarks")}>Закладки</button>
 					<button className={`profile-tab ${activeTab === "history" ? "active" : ""}`} onClick={() => setActiveTab("history")}>История</button>

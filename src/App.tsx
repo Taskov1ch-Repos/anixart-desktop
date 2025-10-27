@@ -16,6 +16,7 @@ import { About } from "./routes/About/About";
 import { useAuth } from "./hooks/useAuth";
 import "./App.css";
 import { applyAppZoom, applyTheme, listenToSystemThemeChanges, loadAppZoom, loadThemePreference } from "./utils/settingsStore";
+import { RPCProvider } from "./contexts/RPCContext";
 
 const AppRoutes: React.FC = () => {
 	const location = useLocation();
@@ -93,5 +94,7 @@ export const App: React.FC = () => {
 
 	}, []);
 
-	return <AppRoutes />;
+	return <RPCProvider>
+		<AppRoutes />
+	</RPCProvider>;
 };

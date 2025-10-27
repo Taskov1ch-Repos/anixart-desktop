@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import Lottie from "lottie-react";
-import { motion } from "framer-motion";
-import "./CachedMedia.css"; // Подключаем стили
+import { motion, HTMLMotionProps } from "framer-motion";
+import "./CachedMedia.css";
 
-// --- Интерфейсы и базовые типы ---
 interface CacheResponse {
 	local_path: string;
 	content_type: string | null;
@@ -21,26 +19,20 @@ interface CachedMediaBaseProps {
 	alt?: string;
 }
 
-// --- Пропсы для типа "image" ---
-interface CachedMediaImageProps extends CachedMediaBaseProps, Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src' | 'alt'> {
+interface CachedMediaImageProps extends CachedMediaBaseProps, Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src" | "alt"> {
 	type: "image";
-	// Класс для плейсхолдера во время загрузки/ошибки
 	placeholderClassName?: string;
-	// Стиль для плейсхолдера
 	placeholderStyle?: React.CSSProperties;
-	// Флаг для отключения анимации появления
 	disableAppearAnimation?: boolean;
 }
 
-// --- Пропсы для типа "lottie" ---
-interface CachedMediaLottieProps extends CachedMediaBaseProps, Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
+interface CachedMediaLottieProps extends CachedMediaBaseProps, Omit<HTMLMotionProps<"div">, "children"> {
 	type: "lottie";
 	disableAppearAnimation?: boolean;
 }
 
 type CachedMediaProps = CachedMediaImageProps | CachedMediaLottieProps;
 
-// --- Компонент ---
 export const CachedMedia: React.FC<CachedMediaProps> = (props) => {
 	const { src, alt, type } = props;
 
@@ -66,15 +58,12 @@ export const CachedMedia: React.FC<CachedMediaProps> = (props) => {
 		const loadMedia = async () => {
 			let cachePath: string | null = null;
 			try {
-				console.log(`CachedMedia: Requesting cache for ${src}`);
 				const response = await invoke<CacheResponse>("cache_media", { url: src });
 				cachePath = response.local_path;
-				console.log(`CachedMedia: Received local path ${cachePath} for ${src}`);
 
 				if (!isMounted) return;
 
 				if (type === "lottie") {
-					console.log(`CachedMedia: Reading Lottie content from ${cachePath}`);
 					const fileContent = await invoke<string>("read_cached_media", { path: cachePath });
 					if (!isMounted) return;
 					try {
@@ -86,22 +75,16 @@ export const CachedMedia: React.FC<CachedMediaProps> = (props) => {
 						setError("Не удалось разобрать данные анимации.");
 						setLottieData(null);
 					}
-				} else { // type === 'image'
+				} else {
 					const assetUrl = convertFileSrc(cachePath);
-					console.log(`CachedMedia: Converted path ${cachePath} to asset URL ${assetUrl}`);
-					// Небольшая задержка перед установкой src, чтобы анимация сработала
-					// setTimeout(() => {
-					//     if (isMounted) {
 					setLocalSrc(assetUrl);
 					setError(null);
-					//     }
-					// }, 10); // Увеличьте, если анимация не видна
 				}
 			} catch (err: any) {
 				console.error(`CachedMedia: Failed to cache or load ${src}:`, err);
 				if (!isMounted) return;
 				let errorMessage = "Не удалось загрузить медиа.";
-				if (typeof err === 'string') {
+				if (typeof err === "string") {
 					errorMessage = err.startsWith("Не удалось") ? err : `Ошибка: ${err}`;
 				} else if (err && typeof err === "object") {
 					const fetchErr = err as FetchError;
@@ -113,17 +96,11 @@ export const CachedMedia: React.FC<CachedMediaProps> = (props) => {
 				setLocalSrc(null);
 				setLottieData(null);
 			} finally {
-				// Устанавливаем isLoading в false только если мы НЕ lottie (для lottie установим после парсинга)
-				// или если произошла ошибка
-				if (isMounted && (type !== 'lottie' || error)) {
+				if (isMounted && (type !== "lottie" || error)) {
 					setIsLoading(false);
 				}
-				// Для lottieisLoading будет сброшен внутри блока try/catch при установке lottieData или ошибки парсинга
-				if (isMounted && type === 'lottie') {
-					// Задержка нужна, чтобы lottie успел отрендериться перед анимацией
-					// setTimeout(() => {
+				if (isMounted && type === "lottie") {
 					if (isMounted) setIsLoading(false);
-					// }, 50);
 				}
 			}
 		};
@@ -135,18 +112,16 @@ export const CachedMedia: React.FC<CachedMediaProps> = (props) => {
 		};
 	}, [src, type]);
 
-	// --- Логика рендеринга ---
-
 	if (type === "image") {
 		const {
-			type: _t, // Исключаем 'type' из передаваемых дальше пропсов
+			type: _t,
 			placeholderClassName,
 			placeholderStyle,
 			className,
-			disableAppearAnimation, // Исключаем наш флаг
-			style, // Забираем style отдельно, чтобы объединить
-			alt: imgAlt, // Используем переданный alt
-			...restImgProps // Все остальные пропсы для img
+			disableAppearAnimation: _dA,
+			style,
+			alt: imgAlt,
+			...restImgProps
 		} = props as CachedMediaImageProps;
 
 		const combinedClassName = `cached-media-element ${className ?? ""}`;
@@ -157,11 +132,11 @@ export const CachedMedia: React.FC<CachedMediaProps> = (props) => {
 			return (
 				<div
 					className={`${placeholderCombinedClassName} ${isLoading ? "loading" : "error"}`}
-					style={{ ...style, ...placeholderStyle }} // Объединяем стили
+					style={{ ...style, ...placeholderStyle }}
 					title={title}
-					role="img" // Добавляем роль для доступности плейсхолдера
+					role="img"
 					aria-label={alt ?? title}
-					{...restImgProps} // Передаем остальные атрибуты (id, data-*), но не обработчики событий img
+					{...restImgProps}
 				>
 					{isLoading && <div className="cached-media-shimmer" />}
 					{!isLoading && (error || !localSrc) && <div className="cached-media-error">{error ? "!" : "?"}</div>}
@@ -169,17 +144,17 @@ export const CachedMedia: React.FC<CachedMediaProps> = (props) => {
 			);
 		}
 
-		// Успешная загрузка
 		return (
 			<motion.img
+				// @ts-ignore
 				src={localSrc}
 				alt={imgAlt}
 				className={combinedClassName}
-				style={style} // Передаем стили
+				style={style}
 				initial={disableAnimation ? false : { opacity: 0 }}
 				animate={{ opacity: 1 }}
 				transition={{ duration: 0.3 }}
-				{...restImgProps} // Передаем все остальные пропсы img (onClick и т.д.)
+				{...restImgProps}
 			/>
 		);
 
@@ -187,7 +162,7 @@ export const CachedMedia: React.FC<CachedMediaProps> = (props) => {
 		const {
 			type: _t,
 			className,
-			disableAppearAnimation: _dA, // Используем переменную disableAnimation
+			disableAppearAnimation: _dA,
 			style,
 			alt: lottieAlt,
 			...restDivProps
@@ -200,24 +175,21 @@ export const CachedMedia: React.FC<CachedMediaProps> = (props) => {
 			<motion.div
 				className={`${combinedClassName} ${isLoading ? "loading" : ""} ${error ? "error" : ""}`}
 				title={title}
-				style={style} // Передаем стили
+				style={style}
 				initial={disableAnimation ? false : { opacity: 0 }}
 				animate={{ opacity: 1 }}
 				transition={{ duration: 0.3 }}
-				{...restDivProps} // Передаем остальные пропсы div
+				{...restDivProps}
 			>
 				{isLoading && <div className="cached-media-shimmer" />}
 				{!isLoading && error && <div className="cached-media-error">!</div>}
 				{!isLoading && !error && lottieData && (
-					// <div className="cached-media-content"> {/* Обертка больше не нужна? */}
 					<Lottie
 						animationData={lottieData}
 						loop={true}
 						autoplay={true}
-						// Стили Lottie лучше задавать через родительский div или className
 						style={{ height: "100%", width: "100%", display: "block" }}
 					/>
-					// </div>
 				)}
 				{!isLoading && !error && !lottieData && <div className="cached-media-error">?</div>}
 			</motion.div>

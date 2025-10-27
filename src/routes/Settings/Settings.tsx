@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-// Remove invoke import if it's no longer needed elsewhere in this file
-// import { invoke } from "@tauri-apps/api/core";
-import { relaunch } from '@tauri-apps/plugin-process';
+import { relaunch } from "@tauri-apps/plugin-process";
 import {
 	applyAppZoom,
 	saveAppZoom,
@@ -12,7 +10,7 @@ import {
 	applyTheme,
 	listenToSystemThemeChanges,
 	loadRpcPreference,
-	saveRpcPreference, // Keep saveRpcPreference
+	saveRpcPreference,
 	loadAppZoom
 } from "../../utils/settingsStore";
 import "./Settings.css";
@@ -28,7 +26,6 @@ export const Settings: React.FC = () => {
 	useEffect(() => {
 		const loadSettings = async () => {
 			try {
-				// Load settings... (this part remains the same)
 				const [savedZoom, savedTheme, savedRpcPref] = await Promise.all([
 					loadAppZoom(),
 					loadThemePreference(),
@@ -41,11 +38,10 @@ export const Settings: React.FC = () => {
 				applyTheme(savedTheme);
 				listenToSystemThemeChanges(savedTheme);
 				setIsRpcEnabled(savedRpcPref);
-				setInitialRpcState(savedRpcPref); // Store the initial state
+				setInitialRpcState(savedRpcPref);
 
 			} catch (error) {
 				console.error("Failed to load settings:", error);
-				// Set defaults... (this part remains the same)
 				setScale(100);
 				setCurrentTheme("system");
 				setIsRpcEnabled(true);
@@ -59,9 +55,8 @@ export const Settings: React.FC = () => {
 		};
 
 		loadSettings();
-	}, []); // Empty dependency array means this runs once on mount
+	}, []);
 
-	// handleScaleChange, handleScaleCommit, handleThemeButtonClick remain the same...
 	const handleScaleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const newScale = parseInt(event.target.value, 10);
 		setScale(newScale);
@@ -83,24 +78,17 @@ export const Settings: React.FC = () => {
 		}
 	};
 
-	// --- CORRECTED RPC Toggle Handler ---
 	const handleRpcToggleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const newRpcState = event.target.checked;
-		setIsRpcEnabled(newRpcState); // Update the visual state of the toggle
-		saveRpcPreference(newRpcState); // Save the preference for next launch
+		setIsRpcEnabled(newRpcState);
+		saveRpcPreference(newRpcState);
 
-		// Show/hide restart prompt based on change from initial state
 		if (newRpcState !== initialRpcState) {
 			setShowRestartPrompt(true);
-			console.log(`Settings: RPC preference changed to ${newRpcState}. Restart required.`);
 		} else {
-			setShowRestartPrompt(false); // Hide if user toggles back to the original state
-			console.log(`Settings: RPC preference reverted to initial state (${newRpcState}).`);
+			setShowRestartPrompt(false);
 		}
-
-		// *** Removed invoke('rpc_connect') and invoke('rpc_disconnect') ***
 	};
-	// --- End Correction ---
 
 	const handleRestart = async () => {
 		try {
@@ -112,7 +100,6 @@ export const Settings: React.FC = () => {
 	};
 
 	if (isLoadingSettings) {
-		// Loading state remains the same...
 		return (
 			<motion.div
 				className="route-wrapper page-content loading-centered"
@@ -137,10 +124,8 @@ export const Settings: React.FC = () => {
 				<div className="settings-page">
 					<h1 className="settings-title">Настройки</h1>
 
-					{/* Appearance Section (Scale, Theme) remains the same */}
 					<section className="settings-section">
 						<h2 className="section-title">Внешний вид</h2>
-						{/* Scale Item */}
 						<div className="setting-item">
 							<div className="setting-info">
 								<label htmlFor="scale-slider">Масштаб интерфейса</label>
@@ -161,7 +146,6 @@ export const Settings: React.FC = () => {
 								/>
 							</div>
 						</div>
-						{/* Theme Item */}
 						<div className="setting-item">
 							<div className="setting-info">
 								<label>Тема оформления</label>
@@ -169,21 +153,21 @@ export const Settings: React.FC = () => {
 							</div>
 							<div className="setting-control theme-buttons">
 								<button
-									className={`theme-button ${(currentTheme ?? 'system') === "system" ? "active" : ""}`}
+									className={`theme-button ${(currentTheme ?? "system") === "system" ? "active" : ""}`}
 									onClick={() => handleThemeButtonClick("system")}
 									disabled={currentTheme === null}
 								>
 									Системная
 								</button>
 								<button
-									className={`theme-button ${(currentTheme ?? 'system') === "light" ? "active" : ""}`}
+									className={`theme-button ${(currentTheme ?? "system") === "light" ? "active" : ""}`}
 									onClick={() => handleThemeButtonClick("light")}
 									disabled={currentTheme === null}
 								>
 									Светлая
 								</button>
 								<button
-									className={`theme-button ${(currentTheme ?? 'system') === "dark" ? "active" : ""}`}
+									className={`theme-button ${(currentTheme ?? "system") === "dark" ? "active" : ""}`}
 									onClick={() => handleThemeButtonClick("dark")}
 									disabled={currentTheme === null}
 								>
@@ -193,13 +177,11 @@ export const Settings: React.FC = () => {
 						</div>
 					</section>
 
-					{/* Integrations Section */}
 					<section className="settings-section">
 						<h2 className="section-title">Интеграции</h2>
 						<div className="setting-item">
 							<div className="setting-info">
 								<label htmlFor="rpc-toggle">Discord Rich Presence</label>
-								{/* Updated description */}
 								<p>Показывать вашу активность в Discord. Изменения вступят в силу после перезапуска.</p>
 							</div>
 							<div className="setting-control toggle-control">
@@ -219,7 +201,6 @@ export const Settings: React.FC = () => {
 				</div>
 			</motion.div>
 
-			{/* Restart Prompt Banner remains the same */}
 			<AnimatePresence>
 				{showRestartPrompt && (
 					<motion.div

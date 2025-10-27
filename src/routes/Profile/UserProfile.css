@@ -244,35 +244,6 @@ html[data-theme="light"] .banner-shimmer {
 	cursor: help;
 }
 
-.profile-friends-preview {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.5rem;
-	margin-bottom: 1rem;
-	cursor: pointer;
-}
-
-.profile-friends-avatars {
-	display: flex;
-	align-items: center;
-}
-
-.profile-friend-avatar {
-	width: 1.75rem;
-	height: 1.75rem;
-	border-radius: 50%;
-	border: 2px solid var(--secondary-background);
-	object-fit: cover;
-	box-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.2);
-}
-
-.profile-friends-count {
-	font-size: 0.85rem;
-	color: var(--navbar-icon-color);
-	font-weight: 500;
-}
-
 .profile-roles {
 	display: flex;
 	flex-wrap: wrap;
@@ -286,10 +257,10 @@ html[data-theme="light"] .banner-shimmer {
 	font-weight: 500;
 	padding: 0.2rem 0.5rem;
 	border-radius: 1rem;
-	color: var(--role-color);
+	color: var(--navbar-active-border);
 	border: 1px solid;
-	border-color: var(--role-color);
-	background-color: color-mix(in srgb, var(--role-color) 25%, transparent);
+	border-color: var(--navbar-active-border);
+	background-color: color-mix(in srgb, var(--navbar-active-border) 25%, transparent);
 }
 
 .profile-details {
