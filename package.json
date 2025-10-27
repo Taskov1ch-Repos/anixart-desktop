@@ -3,6 +3,7 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"description": "Unofficial Anixart (https://anixart-app.com) port for PC",
 	"author": {
 		"name": "Taskov1ch",
 		"url": "https://taskov1ch.github.io",
