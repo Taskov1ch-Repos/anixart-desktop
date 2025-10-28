@@ -8,6 +8,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::Manager;
+use walkdir::WalkDir;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -23,6 +24,12 @@ enum FetchError {
 #[derive(Debug, Serialize)]
 struct FetchResponse {
     content: String,
+}
+
+#[derive(Debug, Serialize)]
+struct CacheResponse {
+    local_path: String,
+    content_type: Option<String>,
 }
 
 #[tauri::command]
@@ -48,12 +55,6 @@ async fn fetch_badge_data(url: String) -> Result<FetchResponse, FetchError> {
     }
 }
 
-#[derive(Debug, Serialize)]
-struct CacheResponse {
-    local_path: String,
-    content_type: Option<String>,
-}
-
 fn get_cache_dir(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
     let cache_base_dir = app_handle
         .path()
@@ -67,6 +68,38 @@ fn get_cache_dir(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
             .map_err(|e| format!("Не удалось создать папку кеша: {}", e))?;
     }
     Ok(media_cache_dir)
+}
+
+fn calculate_dir_size(path: &Path) -> u64 {
+    WalkDir::new(path)
+        .min_depth(1)
+        .max_depth(1)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+        .filter_map(|entry| entry.metadata().ok())
+        .filter(|metadata| metadata.is_file())
+        .map(|metadata| metadata.len())
+        .sum()
+}
+
+#[tauri::command]
+async fn get_cache_size(app_handle: tauri::AppHandle) -> Result<u64, String> {
+    let cache_dir = get_cache_dir(&app_handle)?;
+    Ok(calculate_dir_size(&cache_dir))
+}
+
+#[tauri::command]
+async fn clear_media_cache(app_handle: tauri::AppHandle) -> Result<(), String> {
+    let cache_dir = get_cache_dir(&app_handle)?;
+    match fs::remove_dir_all(&cache_dir) {
+        Ok(_) => {
+            // Повторно создаем папку после удаления
+            fs::create_dir_all(&cache_dir)
+                .map_err(|e| format!("Не удалось создать папку кеша после очистки: {}", e))?;
+            Ok(())
+        }
+        Err(e) => Err(format!("Не удалось очистить кеш: {}", e)),
+    }
 }
 
 fn url_to_filename(url: &str) -> String {
@@ -317,7 +350,9 @@ pub fn run() {
             rpc_connect,
             rpc_disconnect,
             rpc_clear_activity,
-            rpc_set_activity
+            rpc_set_activity,
+            get_cache_size,
+            clear_media_cache
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

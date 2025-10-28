@@ -246,19 +246,14 @@ html[data-theme="dark"] .switch input:focus+.slider {
 	font-weight: 500;
 }
 
-/* --- Стили для баннера перезапуска --- */
 .restart-prompt-container {
 	position: fixed;
 	bottom: 1rem;
-	/* Отступ снизу */
 	left: var(--navbar-width);
-	/* Чтобы не заезжал под навбар */
 	right: 1rem;
-	/* Отступ справа */
 	z-index: 1000;
 	display: flex;
 	justify-content: center;
-	/* Центрируем содержимое баннера */
 }
 
 .restart-prompt {
@@ -267,16 +262,12 @@ html[data-theme="dark"] .switch input:focus+.slider {
 	justify-content: space-between;
 	gap: 1rem;
 	background-color: var(--tooltip-bg);
-	/* Темный фон */
 	color: var(--tooltip-text);
-	/* Светлый текст */
 	padding: 0.75rem 1.25rem;
 	border-radius: 0.5rem;
 	border: 1px solid var(--tooltip-border);
-	/* Граница как у тултипов */
 	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 	max-width: 40rem;
-	/* Ограничим ширину */
 	width: 100%;
 }
 
@@ -285,7 +276,6 @@ html[data-theme="dark"] .switch input:focus+.slider {
 	font-size: 0.9rem;
 	font-weight: 500;
 	flex-grow: 1;
-	/* Чтобы текст занимал доступное место */
 }
 
 .restart-button {
@@ -299,9 +289,7 @@ html[data-theme="dark"] .switch input:focus+.slider {
 	cursor: pointer;
 	transition: background-color 0.2s ease, transform 0.1s ease;
 	white-space: nowrap;
-	/* Чтобы текст кнопки не переносился */
 	flex-shrink: 0;
-	/* Чтобы кнопка не сжималась */
 }
 
 .restart-button:hover {
@@ -312,4 +300,158 @@ html[data-theme="dark"] .switch input:focus+.slider {
 	transform: scale(0.97);
 }
 
-/* --- Конец стилей для баннера --- */
+.setting-control.cache-control {
+	justify-content: flex-end;
+	flex: 0 1 auto;
+	min-width: auto;
+}
+
+.clear-cache-button {
+	padding: 0.6rem 1.2rem;
+	font-size: 0.95rem;
+	font-weight: 500;
+	border-radius: 0.5rem;
+	border: 1px solid var(--input-border);
+	background-color: var(--input-background);
+	color: var(--navbar-icon-color);
+	cursor: pointer;
+	transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+	outline: none;
+}
+
+.clear-cache-button:hover:not(:disabled) {
+	border-color: color-mix(in srgb, var(--primary-color-hover) 50%, transparent);
+	color: var(--primary-color-hover);
+	background-color: color-mix(in srgb, var(--primary-color-hover) 10%, transparent);
+}
+
+.clear-cache-button:focus-visible {
+	box-shadow: 0 0 0 0.1875rem color-mix(in srgb, var(--primary-color) 40%, transparent);
+}
+
+.clear-cache-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+	background-color: var(--input-background);
+	color: var(--navbar-icon-color);
+	border-color: var(--input-border);
+}
+
+.setting-info strong {
+	color: var(--text-color);
+	font-weight: 600;
+}
+
+.setting-error {
+	font-size: 0.8rem !important;
+	color: var(--primary-color-hover) !important;
+	margin-top: 0.5rem !important;
+	font-weight: 500;
+}
+
+.confirm-modal-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.6);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 1001;
+	backdrop-filter: blur(4px);
+}
+
+.confirm-modal-content {
+	background-color: var(--secondary-background);
+	padding: 2rem;
+	border-radius: 0.75rem;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+	width: 90%;
+	max-width: 25rem;
+	text-align: center;
+	border: 1px solid var(--border-color);
+}
+
+.confirm-modal-content h2 {
+	margin-top: 0;
+	margin-bottom: 1rem;
+	font-size: 1.4rem;
+	font-weight: 600;
+	color: var(--text-color);
+}
+
+.confirm-modal-content p {
+	margin-bottom: 1.5rem;
+	font-size: 1rem;
+	color: var(--navbar-icon-color);
+}
+
+.confirm-modal-buttons {
+	display: flex;
+	justify-content: center;
+	gap: 0.75rem;
+}
+
+.modal-button {
+	padding: 0.6rem 1.2rem;
+	font-size: 0.95rem;
+	font-weight: 500;
+	border-radius: 0.5rem;
+	border: none;
+	cursor: pointer;
+	transition: background-color 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
+	outline: none;
+}
+
+.modal-button.cancel {
+	background-color: var(--input-background);
+	color: var(--navbar-icon-color);
+	border: 1px solid var(--input-border);
+}
+
+.modal-button.cancel:hover:not(:disabled) {
+	background-color: var(--navbar-icon-hover-bg);
+	border-color: var(--navbar-icon-hover-bg);
+}
+
+.modal-button.confirm {
+	background-color: var(--primary-color);
+	color: white;
+	border: 1px solid var(--primary-color);
+}
+
+.modal-button.confirm:hover:not(:disabled) {
+	background-color: var(--primary-color-hover);
+	border-color: var(--primary-color-hover);
+}
+
+.modal-button.danger {
+	background-color: var(--primary-color-hover);
+	border-color: var(--primary-color-hover);
+}
+
+.modal-button.danger:hover:not(:disabled) {
+	background-color: color-mix(in srgb, var(--primary-color-hover) 85%, black);
+	border-color: color-mix(in srgb, var(--primary-color-hover) 85%, black);
+}
+
+
+.modal-button:active:not(:disabled) {
+	transform: scale(0.97);
+}
+
+.modal-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+
+.modal-button:focus-visible {
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 40%, transparent);
+}
+
+.modal-button.cancel:focus-visible {
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--navbar-icon-color) 40%, transparent);
+}

@@ -59,6 +59,7 @@ dependencies = [
  "tauri-plugin-process",
  "tauri-plugin-store",
  "tokio",
+ "walkdir",
 ]
 
 [[package]]

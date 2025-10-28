@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { invoke } from "@tauri-apps/api/core"; // <--- Импортируем invoke
 import {
 	applyAppZoom,
 	saveAppZoom,
@@ -15,6 +16,17 @@ import {
 } from "../../utils/settingsStore";
 import "./Settings.css";
 
+// Функция для форматирования размера
+const formatBytes = (bytes: number, decimals = 2): string => {
+	if (bytes === 0) return '0 Bytes';
+	const k = 1024;
+	const dm = decimals < 0 ? 0 : decimals;
+	const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+	const i = Math.floor(Math.log(bytes) / Math.log(k));
+	return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+
 export const Settings: React.FC = () => {
 	const [isLoadingSettings, setIsLoadingSettings] = useState(true);
 	const [scale, setScale] = useState<number | null>(null);
@@ -23,13 +35,36 @@ export const Settings: React.FC = () => {
 	const [showRestartPrompt, setShowRestartPrompt] = useState<boolean>(false);
 	const [initialRpcState, setInitialRpcState] = useState<boolean | null>(null);
 
+	// Новые состояния для кеша
+	const [cacheSize, setCacheSize] = useState<number>(0);
+	const [isLoadingCacheSize, setIsLoadingCacheSize] = useState<boolean>(true);
+	const [isClearingCache, setIsClearingCache] = useState<boolean>(false);
+	const [showClearCacheConfirm, setShowClearCacheConfirm] = useState<boolean>(false);
+	const [clearCacheError, setClearCacheError] = useState<string | null>(null);
+
+	const fetchCacheSize = useCallback(async () => {
+		setIsLoadingCacheSize(true);
+		try {
+			const size = await invoke<number>("get_cache_size");
+			setCacheSize(size);
+		} catch (error) {
+			console.error("Failed to get cache size:", error);
+			setCacheSize(0); // Или можно установить -1 для индикации ошибки
+		} finally {
+			setIsLoadingCacheSize(false);
+		}
+	}, []);
+
+
 	useEffect(() => {
 		const loadSettings = async () => {
+			setIsLoadingSettings(true); // Убедимся, что загрузка началась
 			try {
-				const [savedZoom, savedTheme, savedRpcPref] = await Promise.all([
+				const [savedZoom, savedTheme, savedRpcPref, initialCacheSize] = await Promise.all([
 					loadAppZoom(),
 					loadThemePreference(),
-					loadRpcPreference()
+					loadRpcPreference(),
+					invoke<number>("get_cache_size") // Загружаем размер кеша сразу
 				]);
 
 				setScale(savedZoom);
@@ -39,23 +74,28 @@ export const Settings: React.FC = () => {
 				listenToSystemThemeChanges(savedTheme);
 				setIsRpcEnabled(savedRpcPref);
 				setInitialRpcState(savedRpcPref);
+				setCacheSize(initialCacheSize); // Устанавливаем размер кеша
 
 			} catch (error) {
 				console.error("Failed to load settings:", error);
+				// Устанавливаем значения по умолчанию при ошибке
 				setScale(100);
 				setCurrentTheme("system");
 				setIsRpcEnabled(true);
 				setInitialRpcState(true);
+				setCacheSize(0);
 				applyAppZoom(100);
 				applyTheme("system");
 				listenToSystemThemeChanges("system");
 			} finally {
-				setIsLoadingSettings(false);
+				setIsLoadingSettings(false); // Загрузка завершена
+				setIsLoadingCacheSize(false); // Загрузка размера кеша тоже завершена
 			}
 		};
 
 		loadSettings();
-	}, []);
+	}, []); // Пустой массив зависимостей, чтобы выполнилось один раз при монтировании
+
 
 	const handleScaleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const newScale = parseInt(event.target.value, 10);
@@ -99,6 +139,27 @@ export const Settings: React.FC = () => {
 		}
 	};
 
+	// Обработчики для очистки кеша
+	const handleClearCacheClick = () => {
+		setClearCacheError(null); // Сбрасываем ошибку перед открытием
+		setShowClearCacheConfirm(true);
+	};
+
+	const handleConfirmClearCache = async () => {
+		setIsClearingCache(true);
+		setClearCacheError(null);
+		try {
+			await invoke("clear_media_cache");
+			await fetchCacheSize(); // Обновляем размер кеша после очистки
+		} catch (error: any) {
+			console.error("Failed to clear cache:", error);
+			setClearCacheError(typeof error === 'string' ? error : "Произошла ошибка при очистке кеша.");
+		} finally {
+			setIsClearingCache(false);
+			setShowClearCacheConfirm(false); // Закрываем модальное окно в любом случае
+		}
+	};
+
 	if (isLoadingSettings) {
 		return (
 			<motion.div
@@ -124,8 +185,10 @@ export const Settings: React.FC = () => {
 				<div className="settings-page">
 					<h1 className="settings-title">Настройки</h1>
 
+					{/* Секция Внешний вид */}
 					<section className="settings-section">
 						<h2 className="section-title">Внешний вид</h2>
+						{/* ... (Масштаб интерфейса и Тема оформления как были) */}
 						<div className="setting-item">
 							<div className="setting-info">
 								<label htmlFor="scale-slider">Масштаб интерфейса</label>
@@ -177,8 +240,10 @@ export const Settings: React.FC = () => {
 						</div>
 					</section>
 
+					{/* Секция Интеграции */}
 					<section className="settings-section">
 						<h2 className="section-title">Интеграции</h2>
+						{/* ... (Discord Rich Presence как был) */}
 						<div className="setting-item">
 							<div className="setting-info">
 								<label htmlFor="rpc-toggle">Discord Rich Presence</label>
@@ -198,9 +263,68 @@ export const Settings: React.FC = () => {
 							</div>
 						</div>
 					</section>
+
+					{/* Новая Секция Кеш */}
+					<section className="settings-section">
+						<h2 className="section-title">Кеш приложения</h2>
+						<div className="setting-item">
+							<div className="setting-info">
+								<label>Медиа кеш</label>
+								{isLoadingCacheSize ? (
+									<p>Подсчет размера кеша...</p>
+								) : (
+									<p>Сейчас в кеше <strong>{formatBytes(cacheSize)}</strong> различных медиа файлов (обложки, аватары и т.д.).</p>
+								)}
+								{clearCacheError && <p className="setting-error">{clearCacheError}</p>}
+							</div>
+							<div className="setting-control cache-control">
+								<button
+									className="clear-cache-button"
+									onClick={handleClearCacheClick}
+									disabled={isLoadingCacheSize || isClearingCache || cacheSize === 0}
+								>
+									{isClearingCache ? "Очистка..." : "Очистить кеш"}
+								</button>
+							</div>
+						</div>
+					</section>
 				</div>
 			</motion.div>
 
+			{/* Модальное окно подтверждения очистки кеша */}
+			<AnimatePresence>
+				{showClearCacheConfirm && (
+					<motion.div
+						className="confirm-modal-overlay"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						onClick={() => setShowClearCacheConfirm(false)}
+					>
+						<motion.div
+							className="confirm-modal-content"
+							initial={{ scale: 0.9, opacity: 0 }}
+							animate={{ scale: 1, opacity: 1 }}
+							exit={{ scale: 0.9, opacity: 0 }}
+							onClick={e => e.stopPropagation()}
+						>
+							<h2>Подтверждение</h2>
+							<p>Вы уверены, что хотите очистить кеш медиа файлов? Это действие необратимо.</p>
+							<div className="confirm-modal-buttons">
+								<button onClick={() => setShowClearCacheConfirm(false)} className="modal-button cancel">
+									Отмена
+								</button>
+								<button onClick={handleConfirmClearCache} className="modal-button confirm danger" disabled={isClearingCache}>
+									{isClearingCache ? "Очистка..." : "Очистить"}
+								</button>
+							</div>
+						</motion.div>
+					</motion.div>
+				)}
+			</AnimatePresence>
+
+
+			{/* Баннер перезапуска (как был) */}
 			<AnimatePresence>
 				{showRestartPrompt && (
 					<motion.div
