@@ -20,7 +20,7 @@
 		"@tauri-apps/plugin-opener": "^2",
 		"@tauri-apps/plugin-process": "^2.3.1",
 		"@tauri-apps/plugin-store": "^2.4.0",
-		"anixartjs": "^0.1.0",
+		"anixartjs": "github:Taskov1ch-Repos/AnixartJS",
 		"framer-motion": "^12.23.24",
 		"lottie-react": "^2.4.1",
 		"react": "^19.1.0",
