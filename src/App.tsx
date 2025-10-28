@@ -12,11 +12,27 @@ import { UserProfilePage } from "./routes/Profile/UserProfile";
 import { Settings } from "./routes/Settings/Settings";
 import { UpdatePage } from "./routes/UpdatePage/UpdatePage";
 import { checkForUpdates } from "./utils/updateChecker";
-import { About } from "./routes/About/About";
 import { useAuth } from "./hooks/useAuth";
 import "./App.css";
 import { applyAppZoom, applyTheme, listenToSystemThemeChanges, loadAppZoom, loadThemePreference } from "./utils/settingsStore";
 import { RPCProvider } from "./contexts/RPCContext";
+
+const NotificationsPlaceholder: React.FC = () => (
+	<div
+		className="route-wrapper page-content"
+		style={{
+			display: "flex",
+			flexDirection: "column",
+			alignItems: "center",
+			justifyContent: "center",
+			height: "100vh",
+			textAlign: "center"
+		}}
+	>
+		<h2 style={{ margin: 0 }}>Уведомления</h2>
+		<p>Этот раздел находится в разработке.</p>
+	</div>
+);
 
 const AppRoutes: React.FC = () => {
 	const location = useLocation();
@@ -53,7 +69,7 @@ const AppRoutes: React.FC = () => {
 		{ path: "/profile/:id", element: <UserProfilePage /> },
 		{ path: "/settings", element: <Settings /> },
 		{ path: "/update", element: <UpdatePage /> },
-		{ path: "/about", element: <About /> },
+		{ path: "/notifications", element: <NotificationsPlaceholder /> },
 		{ path: "*", element: <Navigate to="/home" replace /> }
 	]);
 

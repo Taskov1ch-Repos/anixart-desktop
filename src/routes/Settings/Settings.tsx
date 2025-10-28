@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { relaunch } from "@tauri-apps/plugin-process";
-import { invoke } from "@tauri-apps/api/core"; // <--- Импортируем invoke
+import { invoke } from "@tauri-apps/api/core";
 import {
 	applyAppZoom,
 	saveAppZoom,
@@ -16,16 +16,19 @@ import {
 } from "../../utils/settingsStore";
 import "./Settings.css";
 
-// Функция для форматирования размера
+import { useAuth } from "../../hooks/useAuth";
+import { getCurrentVersion } from "../../utils/updateChecker";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { FaQuestionCircle, FaBook, FaExclamationTriangle } from "react-icons/fa";
+
 const formatBytes = (bytes: number, decimals = 2): string => {
-	if (bytes === 0) return '0 Bytes';
+	if (bytes === 0) return "0 Bytes";
 	const k = 1024;
 	const dm = decimals < 0 ? 0 : decimals;
-	const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+	const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 	const i = Math.floor(Math.log(bytes) / Math.log(k));
-	return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+	return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
-
 
 export const Settings: React.FC = () => {
 	const [isLoadingSettings, setIsLoadingSettings] = useState(true);
@@ -34,13 +37,30 @@ export const Settings: React.FC = () => {
 	const [isRpcEnabled, setIsRpcEnabled] = useState<boolean | null>(null);
 	const [showRestartPrompt, setShowRestartPrompt] = useState<boolean>(false);
 	const [initialRpcState, setInitialRpcState] = useState<boolean | null>(null);
-
-	// Новые состояния для кеша
 	const [cacheSize, setCacheSize] = useState<number>(0);
 	const [isLoadingCacheSize, setIsLoadingCacheSize] = useState<boolean>(true);
 	const [isClearingCache, setIsClearingCache] = useState<boolean>(false);
 	const [showClearCacheConfirm, setShowClearCacheConfirm] = useState<boolean>(false);
 	const [clearCacheError, setClearCacheError] = useState<string | null>(null);
+
+	const { userId } = useAuth();
+
+	const currentVersion = getCurrentVersion();
+	const developerUrl = "https://taskov1ch.github.io";
+	const anixartUrl = "https://anixart-app.com";
+	const tauriUrl = "https://tauri.app/";
+	const reactUrl = "https://react.dev/";
+	const typescriptUrl = "https://www.typescriptlang.org/";
+	const viteUrl = "https://vitejs.dev/";
+	const anixartjsUrl = "https://github.com/theDesConnet/AnixartJS";
+
+	const faqUrl = "https://anixart-app.com/faq";
+	const rulesUrl = "https://anixart-app.com/rules";
+	const reportUrl = "https://github.com/Taskov1ch-Repos/anixart-desktop/issues/new";
+
+	const handleLinkClick = (url: string) => {
+		openUrl(url).catch(err => console.error("Failed to open URL:", err));
+	};
 
 	const fetchCacheSize = useCallback(async () => {
 		setIsLoadingCacheSize(true);
@@ -49,22 +69,21 @@ export const Settings: React.FC = () => {
 			setCacheSize(size);
 		} catch (error) {
 			console.error("Failed to get cache size:", error);
-			setCacheSize(0); // Или можно установить -1 для индикации ошибки
+			setCacheSize(0);
 		} finally {
 			setIsLoadingCacheSize(false);
 		}
 	}, []);
 
-
 	useEffect(() => {
 		const loadSettings = async () => {
-			setIsLoadingSettings(true); // Убедимся, что загрузка началась
+			setIsLoadingSettings(true);
 			try {
 				const [savedZoom, savedTheme, savedRpcPref, initialCacheSize] = await Promise.all([
 					loadAppZoom(),
 					loadThemePreference(),
 					loadRpcPreference(),
-					invoke<number>("get_cache_size") // Загружаем размер кеша сразу
+					invoke<number>("get_cache_size")
 				]);
 
 				setScale(savedZoom);
@@ -74,11 +93,9 @@ export const Settings: React.FC = () => {
 				listenToSystemThemeChanges(savedTheme);
 				setIsRpcEnabled(savedRpcPref);
 				setInitialRpcState(savedRpcPref);
-				setCacheSize(initialCacheSize); // Устанавливаем размер кеша
-
+				setCacheSize(initialCacheSize);
 			} catch (error) {
 				console.error("Failed to load settings:", error);
-				// Устанавливаем значения по умолчанию при ошибке
 				setScale(100);
 				setCurrentTheme("system");
 				setIsRpcEnabled(true);
@@ -88,14 +105,13 @@ export const Settings: React.FC = () => {
 				applyTheme("system");
 				listenToSystemThemeChanges("system");
 			} finally {
-				setIsLoadingSettings(false); // Загрузка завершена
-				setIsLoadingCacheSize(false); // Загрузка размера кеша тоже завершена
+				setIsLoadingSettings(false);
+				setIsLoadingCacheSize(false);
 			}
 		};
 
 		loadSettings();
-	}, []); // Пустой массив зависимостей, чтобы выполнилось один раз при монтировании
-
+	}, []);
 
 	const handleScaleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const newScale = parseInt(event.target.value, 10);
@@ -139,9 +155,8 @@ export const Settings: React.FC = () => {
 		}
 	};
 
-	// Обработчики для очистки кеша
 	const handleClearCacheClick = () => {
-		setClearCacheError(null); // Сбрасываем ошибку перед открытием
+		setClearCacheError(null);
 		setShowClearCacheConfirm(true);
 	};
 
@@ -150,13 +165,13 @@ export const Settings: React.FC = () => {
 		setClearCacheError(null);
 		try {
 			await invoke("clear_media_cache");
-			await fetchCacheSize(); // Обновляем размер кеша после очистки
+			await fetchCacheSize();
 		} catch (error: any) {
 			console.error("Failed to clear cache:", error);
-			setClearCacheError(typeof error === 'string' ? error : "Произошла ошибка при очистке кеша.");
+			setClearCacheError(typeof error === "string" ? error : "Произошла ошибка при очистке кеша.");
 		} finally {
 			setIsClearingCache(false);
-			setShowClearCacheConfirm(false); // Закрываем модальное окно в любом случае
+			setShowClearCacheConfirm(false);
 		}
 	};
 
@@ -185,10 +200,45 @@ export const Settings: React.FC = () => {
 				<div className="settings-page">
 					<h1 className="settings-title">Настройки</h1>
 
-					{/* Секция Внешний вид */}
+					{userId && (
+						<section className="settings-section">
+							<h2 className="section-title">Настройки пользователя</h2>
+
+							<div className="setting-item">
+								<div className="setting-info">
+									<label htmlFor="profile-view-select">Общий вид</label>
+									<p>Настройте, как ваш профиль видят другие.</p>
+								</div>
+								<div className="setting-control">
+									<select className="fake-select" id="profile-view-select" disabled>
+										<option>Стандартный</option>
+										<option>Компактный</option>
+									</select>
+								</div>
+							</div>
+
+							<div className="setting-item">
+								<div className="setting-info">
+									<label>Приватность</label>
+									<p>Кто может видеть вашу активность.</p>
+								</div>
+								<div className="setting-control toggle-control" style={{ justifyContent: "flex-end" }}>
+									<label className="switch">
+										<input
+											type="checkbox"
+											id="privacy-toggle"
+											defaultChecked={true}
+											disabled
+										/>
+										<span className="slider round"></span>
+									</label>
+								</div>
+							</div>
+						</section>
+					)}
 					<section className="settings-section">
 						<h2 className="section-title">Внешний вид</h2>
-						{/* ... (Масштаб интерфейса и Тема оформления как были) */}
+
 						<div className="setting-item">
 							<div className="setting-info">
 								<label htmlFor="scale-slider">Масштаб интерфейса</label>
@@ -240,10 +290,9 @@ export const Settings: React.FC = () => {
 						</div>
 					</section>
 
-					{/* Секция Интеграции */}
 					<section className="settings-section">
 						<h2 className="section-title">Интеграции</h2>
-						{/* ... (Discord Rich Presence как был) */}
+
 						<div className="setting-item">
 							<div className="setting-info">
 								<label htmlFor="rpc-toggle">Discord Rich Presence</label>
@@ -264,7 +313,6 @@ export const Settings: React.FC = () => {
 						</div>
 					</section>
 
-					{/* Новая Секция Кеш */}
 					<section className="settings-section">
 						<h2 className="section-title">Кеш приложения</h2>
 						<div className="setting-item">
@@ -288,10 +336,70 @@ export const Settings: React.FC = () => {
 							</div>
 						</div>
 					</section>
+
+					<section className="settings-section">
+						<h2 className="section-title">О приложении</h2>
+						<div className="setting-item about-embedded-content">
+							<div className="about-content">
+								<div className="about-icon logo"></div>
+
+								<h1 className="about-app-title">Anixart Desktop</h1>
+								<p className="about-version">Версия {currentVersion}</p>
+
+								<p className="about-description">
+									Неофициальный десктопный клиент для{" "}
+									<span className="link" onClick={() => handleLinkClick(anixartUrl)}>
+										Anixart
+									</span>
+									.
+								</p>
+
+								<p className="about-developer">
+									Разработано энтузиастом{" "}
+									<span className="link" onClick={() => handleLinkClick(developerUrl)}>
+										Taskov1ch
+									</span>
+									.
+								</p>
+
+								<div className="about-disclaimer">
+									<p>
+										Разработчик не имеет отношения к <strong>SwiftSoft Team</strong>. Все права на бренд Anixart принадлежат их владельцам.
+									</p>
+								</div>
+
+								<p className="about-tech">
+									Сделано с помощью{" "}
+									<span className="link" onClick={() => handleLinkClick(tauriUrl)}>Tauri</span>,{" "}
+									<span className="link" onClick={() => handleLinkClick(reactUrl)}>React</span>,{" "}
+									<span className="link" onClick={() => handleLinkClick(typescriptUrl)}>TypeScript</span>,{" "}
+									<span className="link" onClick={() => handleLinkClick(viteUrl)}>Vite</span>,{" "}
+									<span className="link" onClick={() => handleLinkClick(anixartjsUrl)}>AnixartJS</span>.
+								</p>
+
+								<div className="about-links">
+									<div className="about-link-item" onClick={() => handleLinkClick(faqUrl)}>
+										<FaQuestionCircle size="1.5rem" />
+										<span className="about-tooltip">ЧаВО</span>
+									</div>
+
+									<div className="about-link-item" onClick={() => handleLinkClick(rulesUrl)}>
+										<FaBook size="1.5rem" />
+										<span className="about-tooltip">Правила сообщества</span>
+									</div>
+
+									<div className="about-link-item" onClick={() => handleLinkClick(reportUrl)}>
+										<FaExclamationTriangle size="1.5rem" />
+										<span className="about-tooltip">Сообщить о проблеме</span>
+									</div>
+								</div>
+
+							</div>
+						</div>
+					</section>
 				</div>
 			</motion.div>
 
-			{/* Модальное окно подтверждения очистки кеша */}
 			<AnimatePresence>
 				{showClearCacheConfirm && (
 					<motion.div
@@ -323,8 +431,6 @@ export const Settings: React.FC = () => {
 				)}
 			</AnimatePresence>
 
-
-			{/* Баннер перезапуска (как был) */}
 			<AnimatePresence>
 				{showRestartPrompt && (
 					<motion.div

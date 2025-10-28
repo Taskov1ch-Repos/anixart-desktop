@@ -9,7 +9,7 @@ import {
 	FaUser,
 	FaCog,
 	FaDownload,
-	FaInfoCircle
+	FaBell
 } from "react-icons/fa";
 
 interface NavbarProps {
@@ -56,9 +56,9 @@ export const Navbar: React.FC<NavbarProps> = ({ updateAvailable = false }) => {
 					<FaCog size="1.5rem" />
 					<span className="nav-tooltip">Настройки</span>
 				</NavLink>
-				<NavLink to="/about" className={getNavLinkClass}>
-					<FaInfoCircle size="1.5rem" />
-					<span className="nav-tooltip">О приложении</span>
+				<NavLink to="/notifications" className={getNavLinkClass}>
+					<FaBell size="1.5rem" />
+					<span className="nav-tooltip">Уведомления</span>
 				</NavLink>
 			</div>
 		</nav>
