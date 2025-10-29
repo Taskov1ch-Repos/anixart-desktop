@@ -54,38 +54,14 @@
 	font-size: 0.9rem;
 }
 
-@keyframes spin {
-	to {
-		transform: rotate(360deg);
-	}
-}
-
-@keyframes pulse {
-
-	0%,
-	100% {
-		box-shadow: 0 0 10px 0px #E23D3D;
-	}
-
-	50% {
-		box-shadow: 0 0 12px 3px #FF6060;
-	}
-}
-
-.spinner {
-	width: 1.5rem;
-	height: 1.5rem;
-	border: 3px solid rgba(226, 61, 61, 0.3);
-	border-top-color: #E23D3D;
-	border-radius: 50%;
-	animation: spin 1s linear infinite, pulse 1.5s ease-in-out infinite;
-	margin-bottom: 0.75rem;
-}
-
 .status-indicator.error p {
 	color: #FF6060;
 	margin: 0 0 0.625rem 0;
 	font-weight: 500;
+}
+
+.status-indicator>p {
+	margin: 0;
 }
 
 .retry-prompt {

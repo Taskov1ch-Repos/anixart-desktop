@@ -43,7 +43,6 @@ export const useAuth = () => {
 			if (token) {
 				const client = getAnixartClient();
 				client.token = token;
-				console.log("Auth token loaded and set in Anixart client.");
 			}
 		} catch (error) {
 			console.error("Failed to load auth data:", error);
@@ -74,7 +73,6 @@ export const useAuth = () => {
 					client.token = profileToken.token;
 					setAuthState({ userId: profile.id, token: profileToken.token, isLoading: false });
 
-					console.log("Login successful, navigating to profile.");
 					navigate(`/profile/${profile.id}`);
 					return true;
 				} else {
@@ -100,7 +98,6 @@ export const useAuth = () => {
 			getAnixartClient().token = undefined;
 			setAuthState({ userId: undefined, token: undefined, isLoading: false });
 
-			console.log("Logged out.");
 			navigate("/profile");
 		} catch (error) {
 			console.error("Logout error:", error);

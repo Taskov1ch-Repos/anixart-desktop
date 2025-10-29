@@ -1,33 +1,26 @@
 .titlebar {
 	height: 30px;
-	/* Стандартная высота */
-	/* Используем переменные из вашего App.css, если они есть, с фолбэком */
 	background: var(--navbar-background, #1a1a1a);
 	color: var(--text-color-primary, #ffffff);
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	user-select: none;
-	/* Запрет выделения текста при перетаскивании */
 	position: fixed;
-	/* Фиксируем наверху */
 	top: 0;
 	left: 0;
 	right: 0;
-	z-index: 999999;
-	/* border-bottom: 1px solid var(--border-color, #333); */
+	z-index: 99;
 }
 
 .titlebar-title {
 	padding-left: 15px;
 	font-size: 12px;
 	font-weight: 600;
-	/* Эта область будет перетаскиваемой, т.к. у родителя есть data-tauri-drag-region */
 }
 
 .titlebar-controls {
 	display: flex;
-	/* Эта область НЕ будет перетаскиваемой, т.к. кнопки перехватывают события */
 }
 
 .titlebar-button {
@@ -52,6 +45,5 @@
 
 #titlebar-close:hover {
 	background-color: #e81123;
-	/* Стандартный цвет Windows для кнопки "Закрыть" */
 	color: #fff;
 }

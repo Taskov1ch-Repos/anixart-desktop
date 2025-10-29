@@ -6,6 +6,7 @@ import { updateAnixartClient, getAnixartClient } from "../../client";
 import { Anixart } from "anixartjs";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import "./InitScreen.css";
+import { LoadingSpinner } from "../../components/LoadingSpinner/LoadingSpinner";
 
 type InitStatus = "finding_endpoint" | "pinging" | "error" | "success";
 
@@ -31,7 +32,6 @@ export const InitScreen: React.FC = () => {
 
 			const uniqueUrls = [...new Set(urlsToTry)];
 
-			console.log("URLs to try:", uniqueUrls);
 			setStatus("pinging");
 
 			for (const url of uniqueUrls) {
@@ -124,16 +124,11 @@ export const InitScreen: React.FC = () => {
 
 				<AnimatePresence mode="wait">
 					{(status === "finding_endpoint" || status === "pinging") && (
-						<motion.div
+						<LoadingSpinner
 							key="loading"
-							initial={{ opacity: 0 }}
-							animate={{ opacity: 1 }}
-							exit={{ opacity: 0 }}
-							className="status-indicator"
-						>
-							<div className="spinner"></div> { }
-							<span>{message}</span>
-						</motion.div>
+							message={message}
+							wrapperClassName="status-indicator"
+						/>
 					)}
 
 					{status === "error" && (

@@ -10,7 +10,7 @@
 	align-items: center;
 	padding: 0.75rem 0;
 	box-sizing: border-box;
-	z-index: 100;
+	z-index: 98;
 	background-color: var(--navbar-background);
 	transition: background-color 0.2s ease;
 }

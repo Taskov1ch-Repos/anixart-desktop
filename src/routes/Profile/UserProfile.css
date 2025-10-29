@@ -362,18 +362,15 @@
 	background-color: color-mix(in srgb, var(--primary-color-hover) 10%, transparent);
 }
 
-.profile-page-wrapper.loading,
 .profile-page-wrapper.error {
 	justify-content: center;
 	align-items: center;
 }
 
-.profile-page-wrapper.loading .profile-sidebar,
 .profile-page-wrapper.error .profile-sidebar {
 	display: none;
 }
 
-.profile-page-wrapper.loading .profile-main-content,
 .profile-page-wrapper.error .profile-main-content {
 	flex-grow: 1;
 	display: flex;
@@ -383,22 +380,6 @@
 	padding: 1.5rem 2rem;
 	height: 100vh;
 	text-align: center;
-}
-
-.profile-page-wrapper.loading .spinner {
-	width: 1.5rem;
-	height: 1.5rem;
-	border: 3px solid color-mix(in srgb, var(--primary-color) 30%, transparent);
-	border-top-color: var(--primary-color);
-	border-radius: 50%;
-	animation: page-spin 1s linear infinite;
-	margin-bottom: 0.75rem;
-}
-
-@keyframes page-spin {
-	to {
-		transform: rotate(360deg);
-	}
 }
 
 .profile-page-wrapper.error .profile-main-content h1 {

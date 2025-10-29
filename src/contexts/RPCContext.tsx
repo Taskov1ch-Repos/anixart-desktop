@@ -59,7 +59,6 @@ export const RPCProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
 	const enableRpc = useCallback(() => {
 		if (!isRpcEnabled) {
-			console.log("RPCContext: Enabling RPC");
 			setIsRpcEnabled(true);
 			saveRpcPreference(true);
 			invoke("rpc_connect")
@@ -72,7 +71,6 @@ export const RPCProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
 	const disableRpc = useCallback(() => {
 		if (isRpcEnabled) {
-			console.log("RPCContext: Disabling RPC");
 			setIsRpcEnabled(false);
 			saveRpcPreference(false);
 			invoke("rpc_disconnect").catch(console.error);

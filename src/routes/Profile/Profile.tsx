@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { LoginPage } from "../Login/Login";
@@ -6,12 +5,6 @@ import { motion } from "framer-motion";
 
 export const Profile = () => {
 	const { userId, isLoading } = useAuth();
-
-	useEffect(() => {
-		if (!isLoading) {
-			console.log("Auth check complete. User ID:", userId);
-		}
-	}, [isLoading, userId]);
 
 	if (isLoading) {
 		return (
@@ -28,10 +21,8 @@ export const Profile = () => {
 	}
 
 	if (userId) {
-		console.log(`User logged in (ID: ${userId}). Redirecting to /profile/${userId}`);
 		return <Navigate to={`/profile/${userId}`} replace />;
 	} else {
-		console.log("User not logged in. Showing LoginPage.");
 		return <LoginPage />;
 	}
 };

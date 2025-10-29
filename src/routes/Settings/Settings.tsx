@@ -20,6 +20,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { getCurrentVersion } from "../../utils/updateChecker";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { FaQuestionCircle, FaBook, FaExclamationTriangle } from "react-icons/fa";
+import { LoadingSpinner } from "../../components/LoadingSpinner/LoadingSpinner";
 
 const formatBytes = (bytes: number, decimals = 2): string => {
 	if (bytes === 0) return "0 Bytes";
@@ -177,16 +178,10 @@ export const Settings: React.FC = () => {
 
 	if (isLoadingSettings) {
 		return (
-			<motion.div
-				className="route-wrapper page-content loading-centered"
-				initial={{ opacity: 0 }}
-				animate={{ opacity: 1 }}
-				exit={{ opacity: 0 }}
-				transition={{ duration: 0.2 }}
-			>
-				<div className="spinner"></div>
-				<p>Загрузка настроек...</p>
-			</motion.div>
+			<LoadingSpinner
+				message="Загрузка настроек..."
+				wrapperClassName="route-wrapper"
+			/>
 		);
 	}
 

@@ -17,6 +17,7 @@ import { IChannel } from "anixartjs";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { FriendsContent } from "../../components/FriendsContent/FriendsContent";
 import { CachedMedia } from "../../components/CachedMedia/CachedMedia";
+import { LoadingSpinner } from "../../components/LoadingSpinner/LoadingSpinner";
 
 interface CacheResponse {
 	local_path: string;
@@ -179,9 +180,12 @@ export const UserProfilePage: React.FC = () => {
 	};
 
 	if (isLoading || authLoading)
-		return <motion.div className="profile-page-wrapper loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-			<div className="profile-main-content"><div className="spinner"></div><p>Загрузка профиля...</p></div>
-		</motion.div>;
+		return (
+			<LoadingSpinner
+				message="Загрузка профиля..."
+				wrapperClassName="route-wrapper"
+			/>
+		);
 
 	if (error)
 		return <motion.div className="profile-page-wrapper error" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

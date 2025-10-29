@@ -1,9 +1,7 @@
-import React from 'react';
-import { getCurrentWindow } from '@tauri-apps/api/window';
-import './TitleBar.css';
-
-// Вы можете использовать иконки (например, из lucide-react)
-// import { X, Minimize, Square } from 'lucide-react';
+import React from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import "./TitleBar.css";
+import { BiSquare, BiX, BiMinus } from "react-icons/bi";
 
 const appWindow = getCurrentWindow();
 
@@ -17,16 +15,13 @@ export const TitleBar: React.FC = () => {
 			<div className="titlebar-title">Anixart Desktop</div>
 			<div className="titlebar-controls">
 				<button className="titlebar-button" id="titlebar-minimize" onClick={handleMinimize}>
-					{/* <Minimize size={14} /> */}
-					&#x2014; {/* (—) Em dash */}
+					<BiMinus size={20} />
 				</button>
 				<button className="titlebar-button" id="titlebar-maximize" onClick={handleToggleMaximize}>
-					{/* <Square size={14} /> */}
-					&#x2610; {/* (☐) Ballot box */}
+					<BiSquare size={15} />
 				</button>
 				<button className="titlebar-button" id="titlebar-close" onClick={handleClose}>
-					{/* <X size={14} /> */}
-					&#x2715; {/* (✕) Multiplication X */}
+					<BiX size={20} />
 				</button>
 			</div>
 		</div>

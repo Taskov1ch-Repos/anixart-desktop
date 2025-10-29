@@ -93,7 +93,6 @@ async fn clear_media_cache(app_handle: tauri::AppHandle) -> Result<(), String> {
     let cache_dir = get_cache_dir(&app_handle)?;
     match fs::remove_dir_all(&cache_dir) {
         Ok(_) => {
-            // Повторно создаем папку после удаления
             fs::create_dir_all(&cache_dir)
                 .map_err(|e| format!("Не удалось создать папку кеша после очистки: {}", e))?;
             Ok(())
@@ -248,7 +247,6 @@ fn rpc_connect() {
                 return;
             }
             *RPC_CLIENT.lock().unwrap() = Some(client);
-            println!("RPC: Successfully connected to Discord.");
         }
         Err(e) => {
             eprintln!("RPC: Failed to create client: {:?}", e);
@@ -268,8 +266,6 @@ fn rpc_disconnect() {
 
         if let Err(e) = client.close() {
             eprintln!("RPC: Failed to close connection to Discord: {:?}", e);
-        } else {
-            println!("RPC: Connection to Discord closed.");
         }
     }
 }

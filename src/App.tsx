@@ -91,12 +91,10 @@ export const App: React.FC = () => {
 			try {
 				const savedZoom = await loadAppZoom();
 				applyAppZoom(savedZoom);
-				console.log(`Initial zoom applied: ${savedZoom}%`);
 
 				const savedTheme = await loadThemePreference();
 				applyTheme(savedTheme);
 				listenToSystemThemeChanges(savedTheme);
-				console.log(`Initial theme applied: ${savedTheme}`);
 
 			} catch (error) {
 				console.error("Failed to initialize settings:", error);

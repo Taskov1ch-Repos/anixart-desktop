@@ -61,7 +61,6 @@ export const applyTheme = (theme: Theme) => {
 	}
 
 	root.setAttribute("data-theme", actualTheme);
-	console.log(`Applied theme: ${actualTheme} (Preference: ${theme})`);
 };
 
 let systemThemeListener: ((e: MediaQueryListEvent) => void) | null = null;

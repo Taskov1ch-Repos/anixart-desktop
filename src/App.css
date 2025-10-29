@@ -302,22 +302,10 @@ img {
 	color: var(--navbar-icon-color);
 }
 
-.spinner {
-	border-color: color-mix(in srgb, var(--primary-color) 30%, transparent);
-	border-top-color: var(--primary-color);
-}
-
 .status-indicator.error p {
 	color: var(--primary-color-hover);
 }
 
 .retry-prompt {
 	color: var(--navbar-icon-color);
-}
-
-.loading-centered {
-	justify-content: center !important;
-	align-items: center !important;
-	padding-left: 0 !important;
-	padding-top: 0 !important;
 }
