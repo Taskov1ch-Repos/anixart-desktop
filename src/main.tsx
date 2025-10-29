@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import { DevAddressBar } from "./components/DevAddressBar/DevAddressBar";
+import "./index.css";
 
 import {
 	loadAppZoom,
@@ -11,6 +12,7 @@ import {
 	applyTheme,
 	listenToSystemThemeChanges
 } from "./utils/settingsStore";
+import { TitleBar } from "./components/TitleBar/TitleBar";
 
 const startApp = async () => {
 	const zoom = await loadAppZoom();
@@ -25,10 +27,15 @@ const startApp = async () => {
 	ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 		<React.StrictMode>
 			<BrowserRouter>
-				{isDevelopment && <DevAddressBar />}
-				<App />
+				<div className="app-container">
+					<TitleBar />
+					<div className="main-content">
+						{isDevelopment && <DevAddressBar />}
+						<App />
+					</div>
+				</div>
 			</BrowserRouter>
-		</React.StrictMode>
+		</React.StrictMode >
 	);
 };
 

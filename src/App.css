@@ -72,6 +72,37 @@ html,
 	transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+body {
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	background-color: var(--app-background-color, #0f0f0f);
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+	user-select: auto;
+	-webkit-user-select: auto;
+	-moz-user-select: auto;
+	-ms-user-select: auto;
+}
+
+img,
+a {
+	-webkit-user-drag: none;
+}
+
+*:focus,
+*:focus-visible {
+	outline: none;
+}
+
+img {
+	pointer-events: none;
+}
+
 ::-webkit-scrollbar {
 	width: 8px;
 	height: 8px;

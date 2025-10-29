@@ -1,0 +1,57 @@
+.titlebar {
+	height: 30px;
+	/* Стандартная высота */
+	/* Используем переменные из вашего App.css, если они есть, с фолбэком */
+	background: var(--navbar-background, #1a1a1a);
+	color: var(--text-color-primary, #ffffff);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	user-select: none;
+	/* Запрет выделения текста при перетаскивании */
+	position: fixed;
+	/* Фиксируем наверху */
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 999999;
+	/* border-bottom: 1px solid var(--border-color, #333); */
+}
+
+.titlebar-title {
+	padding-left: 15px;
+	font-size: 12px;
+	font-weight: 600;
+	/* Эта область будет перетаскиваемой, т.к. у родителя есть data-tauri-drag-region */
+}
+
+.titlebar-controls {
+	display: flex;
+	/* Эта область НЕ будет перетаскиваемой, т.к. кнопки перехватывают события */
+}
+
+.titlebar-button {
+	background: transparent;
+	border: none;
+	color: var(--text-color-primary, #ffffff);
+	width: 30px;
+	height: 30px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 16px;
+	line-height: 1;
+	padding: 0;
+	cursor: pointer;
+	transition: background-color 0.1s ease;
+}
+
+.titlebar-button:hover {
+	background-color: var(--hover-background-color, #333);
+}
+
+#titlebar-close:hover {
+	background-color: #e81123;
+	/* Стандартный цвет Windows для кнопки "Закрыть" */
+	color: #fff;
+}

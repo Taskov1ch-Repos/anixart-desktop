@@ -1,0 +1,8 @@
+:root {
+	--titlebar-height: 30px;
+}
+
+.main-content {
+	padding-top: var(--titlebar-height);
+	border: 1px solid var(--border-color);
+}

@@ -15,7 +15,9 @@
 				"title": "Anixart Desktop",
 				"width": 800,
 				"height": 600,
-				"maximized": true
+				"maximized": true,
+				"decorations": false,
+				"transparent": true
 			}
 		],
 		"security": {
