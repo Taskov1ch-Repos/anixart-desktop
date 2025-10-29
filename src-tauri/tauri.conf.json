@@ -13,11 +13,13 @@
 		"windows": [
 			{
 				"title": "Anixart Desktop",
-				"width": 800,
-				"height": 600,
+				"width": 1280,
+				"height": 720,
 				"maximized": true,
 				"decorations": false,
-				"transparent": true
+				"transparent": true,
+				"minHeight": 720,
+				"minWidth": 1280
 			}
 		],
 		"security": {

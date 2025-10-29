@@ -30,6 +30,7 @@ struct FetchResponse {
 struct CacheResponse {
     local_path: String,
     content_type: Option<String>,
+    filename: String,
 }
 
 #[tauri::command]
@@ -125,6 +126,7 @@ async fn cache_media(
                     return Ok(CacheResponse {
                         local_path: existing_path.to_string_lossy().to_string(),
                         content_type: None,
+                        filename: name.to_string(),
                     });
                 }
             }
@@ -150,9 +152,9 @@ async fn cache_media(
                             .and_then(|os_str| os_str.to_str())
                     });
 
-                let final_filename = extension
-                    .map(|ext| format!("{}.{}", filename_base, ext))
-                    .unwrap_or(filename_base);
+                let final_extension = extension.unwrap_or("jpg");
+                let final_filename = format!("{}.{}", filename_base, final_extension);
+
                 let final_cache_path = cache_dir.join(&final_filename);
 
                 match response.bytes().await {
@@ -168,6 +170,7 @@ async fn cache_media(
                             Ok(CacheResponse {
                                 local_path: final_cache_path.to_string_lossy().to_string(),
                                 content_type: content_type,
+                                filename: final_filename,
                             })
                         }
                         Err(e) => Err(FetchError::Other(format!(
@@ -202,6 +205,26 @@ async fn read_cached_media(path: String) -> Result<String, String> {
             }
         }
         Err(e) => Err(format!("Не удалось открыть файл кеша: {}", e)),
+    }
+}
+
+#[tauri::command]
+async fn copy_cached_file(cached_path: String, destination_path: String) -> Result<(), String> {
+    let source_path = PathBuf::from(cached_path);
+    let destination_path = PathBuf::from(destination_path);
+
+    if !source_path.exists() {
+        return Err("Исходный файл в кеше не найден.".to_string());
+    }
+
+    let bytes = match fs::read(&source_path) {
+        Ok(bytes) => bytes,
+        Err(e) => return Err(format!("Не удалось прочитать кешированный файл: {}", e)),
+    };
+
+    match fs::write(&destination_path, bytes) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(format!("Не удалось записать новый файл: {}", e)),
     }
 }
 
@@ -335,6 +358,7 @@ fn rpc_set_activity(activity_payload: RpcActivity) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
@@ -348,7 +372,8 @@ pub fn run() {
             rpc_clear_activity,
             rpc_set_activity,
             get_cache_size,
-            clear_media_cache
+            clear_media_cache,
+            copy_cached_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

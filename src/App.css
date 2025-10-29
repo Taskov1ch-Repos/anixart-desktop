@@ -99,10 +99,6 @@ a {
 	outline: none;
 }
 
-img {
-	pointer-events: none;
-}
-
 ::-webkit-scrollbar {
 	width: 8px;
 	height: 8px;

@@ -8,7 +8,8 @@ import { BaseProfile } from "anixartjs/dist/classes/BaseProfile";
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import {
 	FaVk, FaTelegramPlane, FaInstagram, FaTiktok, FaDiscord, FaCalendarAlt,
-	FaClock, FaEye, FaHourglassHalf, FaShieldAlt, FaCrown, FaUserPlus, FaUserMinus
+	FaClock, FaEye, FaHourglassHalf, FaShieldAlt, FaCrown, FaUserPlus, FaUserMinus,
+	FaDownload, FaListAlt, FaUserFriends, FaBookmark, FaHistory
 } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import { IoIosStats } from "react-icons/io";
@@ -18,10 +19,12 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { FriendsContent } from "../../components/FriendsContent/FriendsContent";
 import { CachedMedia } from "../../components/CachedMedia/CachedMedia";
 import { LoadingSpinner } from "../../components/LoadingSpinner/LoadingSpinner";
+import { save } from "@tauri-apps/plugin-dialog";
 
 interface CacheResponse {
 	local_path: string;
 	content_type: string | null;
+	filename: string;
 }
 
 const formatLastActivity = (timestamp: number): string => {
@@ -58,13 +61,14 @@ export const UserProfilePage: React.FC = () => {
 	const { userId, token, isLoading: authLoading, logout } = useAuth();
 	const [profileData, setProfileData] = useState<FullProfile | null>(null);
 	const [channelData, setChannelData] = useState<IChannel | null>(null);
-	const [friends, setFriends] = useState<BaseProfile[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [cachedBannerUrl, setCachedBannerUrl] = useState<string | null>(null);
-	const [isBannerLoading, setIsBannerLoading] = useState(false);
 	const [activeTab, setActiveTab] = useState<ProfileTab>("summary");
 	const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+	const [showAvatarModal, setShowAvatarModal] = useState(false);
+	const [isAvatarLoaded, setIsAvatarLoaded] = useState(false);
+	const [isDownloading, setIsDownloading] = useState(false);
 
 	const numericId = id ? parseInt(id, 10) : null;
 	const isOwnProfile = numericId === userId;
@@ -85,22 +89,15 @@ export const UserProfilePage: React.FC = () => {
 			setIsLoading(true);
 			setError(null);
 			setProfileData(null);
-			setFriends([]);
 			setChannelData(null);
 			setCachedBannerUrl(null);
 			setActiveTab("summary");
+			setIsAvatarLoaded(false);
 
 			try {
 				const client = getAnixartClient();
 				const profile = await client.getProfileById(numericId);
 				setProfileData(profile);
-
-				if (profile && !profile.isCountsHidden) {
-					try {
-						const fetchedFriends = await profile.getFriends(0);
-						setFriends(fetchedFriends.slice(0, 3));
-					} catch { }
-				}
 
 				if (profile) {
 					try {
@@ -123,22 +120,34 @@ export const UserProfilePage: React.FC = () => {
 		fetchProfile();
 	}, [id, numericId, userId, token, isOwnProfile, navigate, authLoading, location.pathname]);
 
-	useEffect(() => {
-		let mounted = true;
-		const bannerUrl = channelData?.cover?.toString() || profileData?.theme_background_url || null;
-		if (bannerUrl) {
-			setIsBannerLoading(true);
-			setCachedBannerUrl(null);
-			invoke<CacheResponse>("cache_media", { url: bannerUrl })
-				.then(r => mounted && setCachedBannerUrl(convertFileSrc(r.local_path)))
-				.catch(() => mounted && setCachedBannerUrl(bannerUrl))
-				.finally(() => mounted && setIsBannerLoading(false));
-		} else {
-			setCachedBannerUrl(null);
-			setIsBannerLoading(false);
+	const handleDownloadAvatar = async () => {
+		if (!profileData?.avatar || isDownloading) return;
+		setIsDownloading(true);
+		try {
+			const cacheRes = await invoke<CacheResponse>("cache_media", { url: profileData.avatar });
+
+			const destinationPath = await save({
+				title: "Сохранить аватар",
+				defaultPath: cacheRes.filename,
+				filters: [
+					{ name: "Изображения", extensions: ["png", "jpeg", "jpg", "gif", "webp"] },
+					{ name: "Все файлы", extensions: ["*"] }
+				]
+			});
+
+			if (destinationPath) {
+				await invoke("copy_cached_file", {
+					cachedPath: cacheRes.local_path,
+					destinationPath: destinationPath
+				});
+			}
+
+		} catch (err) {
+			console.error("Не удалось сохранить аватар:", err);
+		} finally {
+			setIsDownloading(false);
 		}
-		return () => { mounted = false; };
-	}, [channelData, profileData?.theme_background_url]);
+	};
 
 	const handleFriendRequest = async () => {
 		if (!profileData || !token) return;
@@ -146,8 +155,10 @@ export const UserProfilePage: React.FC = () => {
 		const id = profileData.id;
 		try {
 			let res: { friend_status: number | null };
+
 			if (profileData.friendStatus === null || profileData.friendStatus === 1)
 				res = await client.endpoints.profile.sendFriendRequest(id);
+
 			else res = await client.endpoints.profile.removeFriendRequest(id);
 
 			setProfileData(prev => {
@@ -163,12 +174,8 @@ export const UserProfilePage: React.FC = () => {
 		const { friendStatus, isFriendRequestsDisallowed } = profileData || {};
 		if (isFriendRequestsDisallowed && friendStatus !== 2)
 			return { text: "Заявки отключены", icon: <FaUserPlus />, disabled: true, className: "friend-button-disabled" };
-		if (friendStatus === null)
+		if (friendStatus === null && friendStatus <= 1)
 			return { text: "Добавить в друзья", icon: <FaUserPlus />, disabled: false, className: "friend-button-add" };
-		if (friendStatus === 1)
-			return { text: "Принять заявку", icon: <FaUserPlus />, disabled: false, className: "friend-button-add" };
-		if (friendStatus === 0)
-			return { text: "Отменить заявку", icon: <FaUserMinus />, disabled: false, className: "friend-button-remove" };
 		if (friendStatus === 2)
 			return { text: "Удалить из друзей", icon: <FaUserMinus />, disabled: false, className: "friend-button-remove" };
 		return null;
@@ -218,7 +225,14 @@ export const UserProfilePage: React.FC = () => {
 			<aside className="profile-sidebar">
 				{channelData && <CachedMedia type="image" src={channelData.cover} alt="Profile Banner" className="profile-banner" style={bannerStyle} />}
 				<div className="profile-avatar-container">
-					<CachedMedia src={profileData.avatar} alt={profileData.login} type="image" className="profile-avatar" />
+					<CachedMedia
+						src={profileData.avatar}
+						alt={profileData.login}
+						type="image"
+						className={`profile-avatar ${isAvatarLoaded ? "loaded" : ""}`}
+						onLoad={() => setIsAvatarLoaded(true)}
+						onClick={() => isAvatarLoaded && setShowAvatarModal(true)}
+					/>
 					{profileData.isOnline && <div className="profile-online-indicator"></div>}
 				</div>
 				<div className="profile-user-info">
@@ -288,10 +302,38 @@ export const UserProfilePage: React.FC = () => {
 
 			<main className="profile-main-content">
 				<div className="profile-content-tabs">
-					<button className={`profile-tab ${activeTab === "summary" ? "active" : ""}`} onClick={() => setActiveTab("summary")}>Сводка</button>
-					<button className={`profile-tab ${activeTab === "friends" ? "active" : ""}`} onClick={() => setActiveTab("friends")}>Друзья</button>
-					<button className={`profile-tab ${activeTab === "bookmarks" ? "active" : ""}`} onClick={() => setActiveTab("bookmarks")}>Закладки</button>
-					<button className={`profile-tab ${activeTab === "history" ? "active" : ""}`} onClick={() => setActiveTab("history")}>История</button>
+					<button
+						className={`profile-tab ${activeTab === "summary" ? "active" : ""}`}
+						onClick={() => setActiveTab("summary")}
+						title="Сводка"
+					>
+						<FaListAlt />
+						<span>Сводка</span>
+					</button>
+					<button
+						className={`profile-tab ${activeTab === "friends" ? "active" : ""}`}
+						onClick={() => setActiveTab("friends")}
+						title="Друзья"
+					>
+						<FaUserFriends />
+						<span>Друзья</span>
+					</button>
+					<button
+						className={`profile-tab ${activeTab === "bookmarks" ? "active" : ""}`}
+						onClick={() => setActiveTab("bookmarks")}
+						title="Закладки"
+					>
+						<FaBookmark />
+						<span>Закладки</span>
+					</button>
+					<button
+						className={`profile-tab ${activeTab === "history" ? "active" : ""}`}
+						onClick={() => setActiveTab("history")}
+						title="История"
+					>
+						<FaHistory />
+						<span>История</span>
+					</button>
 				</div>
 				<div className="profile-content-body">{renderContent()}</div>
 			</main>
@@ -306,6 +348,34 @@ export const UserProfilePage: React.FC = () => {
 								<button onClick={() => setShowLogoutConfirm(false)} className="modal-button cancel">Отмена</button>
 								<button onClick={logout} className="modal-button confirm">Выйти</button>
 							</div>
+						</motion.div>
+					</motion.div>
+				)}
+
+				{showAvatarModal && (
+					<motion.div
+						className="avatar-modal-overlay"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						onClick={() => setShowAvatarModal(false)}
+					>
+						<motion.div
+							className="avatar-modal-content"
+							initial={{ scale: 0.9, opacity: 0 }}
+							animate={{ scale: 1, opacity: 1 }}
+							exit={{ scale: 0.9, opacity: 0 }}
+							onClick={e => e.stopPropagation()}
+						>
+							<img src={profileData.avatar} alt="Full Avatar" className="avatar-modal-image" />
+							<button
+								className="avatar-modal-download"
+								onClick={handleDownloadAvatar}
+								disabled={isDownloading}
+							>
+								<FaDownload />
+								<span>{isDownloading ? "Сохранение..." : "Скачать"}</span>
+							</button>
 						</motion.div>
 					</motion.div>
 				)}

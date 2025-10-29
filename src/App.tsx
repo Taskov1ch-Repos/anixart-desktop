@@ -108,6 +108,18 @@ export const App: React.FC = () => {
 
 	}, []);
 
+	useEffect(() => {
+		const handleContextMenu = (e: MouseEvent) => {
+			e.preventDefault();
+		};
+
+		document.addEventListener("contextmenu", handleContextMenu);
+
+		return () => {
+			document.removeEventListener("contextmenu", handleContextMenu);
+		};
+	}, []);
+
 	return <RPCProvider>
 		<AppRoutes />
 	</RPCProvider>;
