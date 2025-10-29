@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../../hooks/useAuth";
@@ -53,6 +53,7 @@ const formatWatchedTime = (sec: number): string => {
 };
 
 type ProfileTab = "summary" | "friends" | "bookmarks" | "history";
+type FriendAction = "send" | "cancel" | "accept" | "remove" | null;
 
 export const UserProfilePage: React.FC = () => {
 	const { id } = useParams<{ id: string }>();
@@ -69,9 +70,30 @@ export const UserProfilePage: React.FC = () => {
 	const [showAvatarModal, setShowAvatarModal] = useState(false);
 	const [isAvatarLoaded, setIsAvatarLoaded] = useState(false);
 	const [isDownloading, setIsDownloading] = useState(false);
+	const [outgoingRequests, setOutgoingRequests] = useState<number[]>([]);
+	const [incomingRequests, setIncomingRequests] = useState<number[]>([]);
+	const [isFriendActionLoading, setIsFriendActionLoading] = useState(false);
 
 	const numericId = id ? parseInt(id, 10) : null;
 	const isOwnProfile = numericId === userId;
+
+	const fetchFriendRequests = useCallback(async () => {
+		if (!token || isOwnProfile) {
+			setOutgoingRequests([]);
+			setIncomingRequests([]);
+			return;
+		}
+		try {
+			const client = getAnixartClient();
+			const outPromise = client.endpoints.profile.getFriendRequests("out", 999999);
+			const inPromise = client.endpoints.profile.getFriendRequests("in", 999999);
+			const [out, inReq] = await Promise.all([outPromise, inPromise]);
+			setOutgoingRequests(out.content.map(r => r.id));
+			setIncomingRequests(inReq.content.map(r => r.id));
+		} catch (err) {
+			console.error("Failed to fetch friend requests:", err);
+		}
+	}, [token, isOwnProfile]);
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -93,6 +115,8 @@ export const UserProfilePage: React.FC = () => {
 			setCachedBannerUrl(null);
 			setActiveTab("summary");
 			setIsAvatarLoaded(false);
+			setOutgoingRequests([]);
+			setIncomingRequests([]);
 
 			try {
 				const client = getAnixartClient();
@@ -100,6 +124,8 @@ export const UserProfilePage: React.FC = () => {
 				setProfileData(profile);
 
 				if (profile) {
+					fetchFriendRequests();
+
 					try {
 						const fetchedBlog = await client.endpoints.channel.getBlog(profile.id);
 						if (fetchedBlog.code === 0) setChannelData(fetchedBlog.channel);
@@ -118,7 +144,7 @@ export const UserProfilePage: React.FC = () => {
 			}
 		};
 		fetchProfile();
-	}, [id, numericId, userId, token, isOwnProfile, navigate, authLoading, location.pathname]);
+	}, [id, numericId, userId, token, isOwnProfile, navigate, authLoading, location.pathname, fetchFriendRequests]);
 
 	const handleDownloadAvatar = async () => {
 		if (!profileData?.avatar || isDownloading) return;
@@ -150,36 +176,107 @@ export const UserProfilePage: React.FC = () => {
 	};
 
 	const handleFriendRequest = async () => {
-		if (!profileData || !token) return;
+		if (!profileData || !token || !friendButtonProps || !friendButtonProps.action || isFriendActionLoading) return;
+
+		setIsFriendActionLoading(true);
 		const client = getAnixartClient();
 		const id = profileData.id;
+		const currentAction = friendButtonProps.action;
+
 		try {
-			let res: { friend_status: number | null };
+			let newFriendStatus: number | null = profileData.friendStatus;
 
-			if (profileData.friendStatus === null || profileData.friendStatus === 1)
-				res = await client.endpoints.profile.sendFriendRequest(id);
-
-			else res = await client.endpoints.profile.removeFriendRequest(id);
+			switch (currentAction) {
+				case "send":
+					await client.endpoints.profile.sendFriendRequest(id);
+					newFriendStatus = 1;
+					break;
+				case "cancel":
+					await client.endpoints.profile.removeFriendRequest(id);
+					newFriendStatus = null;
+					break;
+				case "accept":
+					await client.endpoints.profile.sendFriendRequest(id);
+					newFriendStatus = 2;
+					break;
+				case "remove":
+					await client.endpoints.profile.removeFriendRequest(id);
+					newFriendStatus = null;
+					break;
+				default:
+					setIsFriendActionLoading(false);
+					return;
+			}
 
 			setProfileData(prev => {
 				if (!prev) return null;
 				const updatedProfileData = Object.assign(Object.create(Object.getPrototypeOf(prev)), prev);
-				updatedProfileData.friendStatus = res.friend_status;
+				updatedProfileData.friendStatus = newFriendStatus;
 				return updatedProfileData;
 			});
-		} catch { }
+
+			await fetchFriendRequests();
+
+		} catch (err) {
+			console.error("Ошибка при изменении дружбы:", err);
+		} finally {
+			setIsFriendActionLoading(false);
+		}
 	};
 
-	const friendButtonProps = token && !isOwnProfile ? (() => {
-		const { friendStatus, isFriendRequestsDisallowed } = profileData || {};
-		if (isFriendRequestsDisallowed && friendStatus !== 2)
-			return { text: "Заявки отключены", icon: <FaUserPlus />, disabled: true, className: "friend-button-disabled" };
-		if (friendStatus === null && friendStatus <= 1)
-			return { text: "Добавить в друзья", icon: <FaUserPlus />, disabled: false, className: "friend-button-add" };
-		if (friendStatus === 2)
-			return { text: "Удалить из друзей", icon: <FaUserMinus />, disabled: false, className: "friend-button-remove" };
-		return null;
-	})() : null;
+	const friendButtonProps = useMemo(() => {
+		if (!token || isOwnProfile || !profileData) return null;
+
+		const { id, friendStatus, isFriendRequestsDisallowed } = profileData;
+
+		if (isFriendRequestsDisallowed && friendStatus !== 2) {
+			return {
+				text: "Заявки отключены",
+				icon: <FaUserPlus />,
+				disabled: true,
+				action: null as FriendAction,
+				className: "friend-button-disabled"
+			};
+		}
+
+		if (friendStatus === 2) {
+			return {
+				text: "Удалить из друзей",
+				icon: <FaUserMinus />,
+				disabled: isFriendActionLoading,
+				action: "remove" as FriendAction,
+				className: "friend-button-remove"
+			};
+		}
+
+		if (outgoingRequests.includes(id)) {
+			return {
+				text: "Отменить запрос",
+				icon: <FaUserMinus />,
+				disabled: isFriendActionLoading,
+				action: "cancel" as FriendAction,
+				className: "friend-button-remove"
+			};
+		}
+
+		if (incomingRequests.includes(id)) {
+			return {
+				text: "Принять запрос",
+				icon: <FaUserPlus />,
+				disabled: isFriendActionLoading,
+				action: "accept" as FriendAction,
+				className: "friend-button-add"
+			};
+		}
+
+		return {
+			text: "Добавить в друзья",
+			icon: <FaUserPlus />,
+			disabled: isFriendActionLoading,
+			action: "send" as FriendAction,
+			className: "friend-button-add"
+		};
+	}, [token, isOwnProfile, profileData, outgoingRequests, incomingRequests, isFriendActionLoading]);
 
 	const handleOpenUrl = async (url: string) => {
 		if (!url) return;
@@ -245,9 +342,15 @@ export const UserProfilePage: React.FC = () => {
 						{profileData.isSponsor && <span className="profile-role profile-status-indicator"><FaCrown /> Спонсор</span>}
 					</div>
 					<p className="profile-status">{profileData.status || "Нет статуса"}</p>
+					{/* --- ОБНОВЛЕННАЯ КНОПКА --- */}
 					{friendButtonProps && (
-						<button className={`profile-action-button ${friendButtonProps.className}`} onClick={handleFriendRequest} disabled={friendButtonProps.disabled}>
-							{friendButtonProps.icon}<span>{friendButtonProps.text}</span>
+						<button
+							className={`profile-action-button ${friendButtonProps.className}`}
+							onClick={handleFriendRequest}
+							disabled={friendButtonProps.disabled}
+						>
+							{friendButtonProps.icon}
+							<span>{isFriendActionLoading ? "..." : friendButtonProps.text}</span>
 						</button>
 					)}
 				</div>
